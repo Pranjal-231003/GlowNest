@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlowNest — Hand-poured Scented Candles</title>
+<meta name="description" content="Hand-poured jar candles in floral, dessert, and classic styles, made in small batches by GlowNest.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">GlowNest</a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="catalogue.html">Catalogue</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#gallery">Journal</a></li>
+    </ul>
+    <div class="nav-right">
+      <a class="icon-btn" href="catalogue.html" aria-label="Search catalogue">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </a>
+      <a class="icon-btn" href="catalogue.html" aria-label="View cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l1.5 3"/></svg>
+        <span class="cart-count" data-cart-count style="display:none;">0</span>
+      </a>
+      <button class="nav-toggle" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="hero-eyebrow">Hand-poured, small batch</span>
+      <h1>Light that feels like home.</h1>
+      <p class="lede">Fragrance that feels like love — candles poured in small batches, one jar at a time, from a tiny studio to your living room.</p>
+      <div class="hero-actions">
+        <a href="catalogue.html" class="btn btn-gold">Shop the collection</a>
+        <a href="index.html#about" class="btn btn-cream">Our story</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;">
+        <ellipse cx="100" cy="222" rx="70" ry="9" fill="#0f1c12" opacity="0.3"/>
+        <rect x="58" y="52" width="84" height="164" rx="3" fill="#e9e0ca" opacity="0.92" stroke="#c9a26a" stroke-width="1"/>
+        <rect x="62" y="150" width="76" height="62" fill="#8fae7c" opacity="0.7"/>
+        <g transform="translate(100,50)">
+          <circle r="18" fill="#8fae7c" opacity="0.9"/>
+          <g stroke="#c9a26a" fill="none" stroke-width="1.4">
+            <circle r="7"/>
+            <path d="M0,-18 Q7,-9 0,0 Q-7,-9 0,-18"/>
+            <path d="M0,18 Q7,9 0,0 Q-7,9 0,18"/>
+            <path d="M-18,0 Q-9,-7 0,0 Q-9,7 -18,0"/>
+            <path d="M18,0 Q9,-7 0,0 Q9,7 18,0"/>
+          </g>
+        </g>
+        <line x1="100" y1="30" x2="100" y2="48" stroke="#f6f1e6" stroke-width="1.4"/>
+        <path d="M100,30 C95,20 105,14 100,4 C95,14 105,20 100,30 Z" fill="#e7b25a"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<section class="pad">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker">This week's pour</span>
+        <h2>A few of our favourites</h2>
+      </div>
+      <a href="catalogue.html" class="btn btn-line">View full catalogue</a>
+    </div>
+    <div class="collage" id="home-collage"></div>
+  </div>
+</section>
+
+<section class="pad tight" style="background:var(--stone);">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker">Find your scent</span>
+        <h2>Shop by category</h2>
+      </div>
+    </div>
+    <div class="cat-row">
+      <a class="cat-tile" href="catalogue.html?cat=floral" style="background:linear-gradient(135deg,#5c7a4a,#3a5940);">
+        <h3>Floral Candles</h3>
+        <span>Green, herbal, garden-fresh</span>
+      </a>
+      <a class="cat-tile" href="catalogue.html?cat=dessert" style="background:linear-gradient(135deg,#a9793a,#7a5527);">
+        <h3>Dessert Candles</h3>
+        <span>Warm, sweet, a little indulgent</span>
+      </a>
+      <a class="cat-tile" href="catalogue.html?cat=classic" style="background:linear-gradient(135deg,#3a4a3a,#1f3324);">
+        <h3>Classic Jar Candles</h3>
+        <span>Quiet, everyday, reliable</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="pad" id="about">
+  <div class="wrap">
+    <div class="about-split">
+      <div class="about-portrait">
+        <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+          <rect width="400" height="500" fill="#dbe4d6"/>
+          <g fill="none" stroke="#3a5940" stroke-width="1.2" opacity="0.55">
+            <path d="M60,460 C100,340 70,220 190,120"/>
+            <path d="M120,400 Q170,360 155,300"/>
+            <path d="M160,340 Q210,310 210,250"/>
+          </g>
+          <circle cx="240" cy="190" r="70" fill="#c9a26a" opacity="0.85"/>
+          <rect x="170" y="260" width="140" height="180" rx="40" fill="#a9793a" opacity="0.85"/>
+        </svg>
+      </div>
+      <div class="about-copy">
+        <span class="section-kicker">About GlowNest</span>
+        <h2>Meet Divya, founder of GlowNest</h2>
+        <p>By profession, a chartered accountant. By passion, a creator of calm, cozy spaces. GlowNest began with a simple idea — to craft candles that bring warmth, comfort, and a little thoughtfulness into everyday moments.</p>
+        <p>Each candle is hand-poured with care and intention, in small batches, from a home studio. Nothing is mass-produced, and every jar is checked by hand before it ships.</p>
+        <blockquote>Thank you for supporting a small beginning.</blockquote>
+        <div class="signature">— Divya, Founder</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pad tight" style="background:var(--forest-dark);" id="gallery">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker" style="color:var(--gold-soft);">From the studio</span>
+        <h2 style="color:var(--cream);">A little scroll through GlowNest</h2>
+      </div>
+    </div>
+    <div class="gallery-grid">
+      <div class="g-tile g-tall" style="background:linear-gradient(160deg,#8fae7c,#3a5940);"></div>
+      <div class="g-tile" style="background:linear-gradient(160deg,#c9a26a,#a9793a);"></div>
+      <div class="g-tile" style="background:linear-gradient(160deg,#e8d9b8,#c9a26a);"></div>
+      <div class="g-tile g-tall" style="background:linear-gradient(160deg,#5c6b52,#1f3324);"></div>
+      <div class="g-tile" style="background:linear-gradient(160deg,#bcdcc6,#7f9b6a);"></div>
+      <div class="g-tile" style="background:linear-gradient(160deg,#dbe4d6,#8fae7c);"></div>
+    </div>
+  </div>
+</section>
+
+<section class="pad">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker">In their words</span>
+        <h2>What people are saying</h2>
+      </div>
+    </div>
+    <div class="testi-row">
+      <div class="testi">
+        <p>The Honey Fig Tart candle smells exactly like it looks. Genuinely the nicest gift I've given this year.</p>
+        <div class="who">Ananya R.</div>
+      </div>
+      <div class="testi">
+        <p>Burns evenly all the way down, which is rare. Wood & Ash has become my go-to for evenings.</p>
+        <div class="who">Karan M.</div>
+      </div>
+      <div class="testi">
+        <p>Loved that it's not overpoweringly sweet. Mint Ice is perfect for my small apartment.</p>
+        <div class="who">Priya S.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Ready to light something new?</h2>
+    <a href="catalogue.html" class="btn btn-gold">Shop Collection</a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4 style="font-family:var(--serif); font-style:italic; font-size:20px;">GlowNest</h4>
+        <p>Hand-poured candles, made in small batches. Warm, considered, and a little bit slow — on purpose.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <a href="catalogue.html?cat=floral">Floral</a>
+        <a href="catalogue.html?cat=dessert">Dessert</a>
+        <a href="catalogue.html?cat=classic">Classic</a>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <a href="index.html#about">Our story</a>
+        <a href="index.html#gallery">Journal</a>
+        <a href="admin.html">Admin</a>
+      </div>
+      <div>
+        <h4>Stay in touch</h4>
+        <p>DMs open for early access to new pours and restocks.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 GlowNest. All rights reserved.</span>
+      <span>Made with care, one jar at a time.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
