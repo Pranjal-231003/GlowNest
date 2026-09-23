@@ -1,77 +1,71 @@
-/* ============================================================
-   GLOWNEST ADMIN — demo login + CRUD
-   NOTE: this is a front-end-only prototype. "Auth" is a local
-   demo check, not real security — see banner note in admin.html.
-   ============================================================ */
+/* GlowNest admin — Supabase Auth + product CRUD */
 
-const GN_ADMIN_USER = "divya@glownest.studio";
-const GN_ADMIN_PASS = "glownest2026";
-
-function gnIsAdminAuthed(){
-  return sessionStorage.getItem("gn_admin_authed") === "1";
+function gnAdminShell(){
+  return {
+    out: document.getElementById("admin-logged-out"),
+    inn: document.getElementById("admin-logged-in")
+  };
 }
 
-function gnAdminLogin(email, pass){
-  if(email.trim().toLowerCase() === GN_ADMIN_USER && pass === GN_ADMIN_PASS){
-    sessionStorage.setItem("gn_admin_authed", "1");
-    return true;
+function gnShowAdmin(authed, email){
+  const { out, inn } = gnAdminShell();
+  if(!out || !inn) return;
+  out.style.display = authed ? "none" : "block";
+  inn.style.display = authed ? "block" : "none";
+  const emailEl = document.getElementById("admin-email-label");
+  if(emailEl && email) emailEl.textContent = email;
+}
+
+async function gnRequireAdmin(sb){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session) return null;
+  const { data, error } = await sb.from("admin_users").select("user_id").eq("user_id", session.user.id).maybeSingle();
+  if(error || !data){
+    await sb.auth.signOut();
+    const err = document.getElementById("login-error");
+    if(err) err.textContent = "This account is not an admin. Add its user id to admin_users in Supabase.";
+    return null;
   }
-  return false;
+  return session;
 }
 
-function gnAdminLogout(){
-  sessionStorage.removeItem("gn_admin_authed");
-  window.location.reload();
-}
-
-function gnInitAdminLogin(){
-  const form = document.getElementById("admin-login-form");
-  if(!form) return;
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const email = document.getElementById("login-email").value;
-    const pass = document.getElementById("login-pass").value;
-    if(gnAdminLogin(email, pass)){
-      window.location.reload();
-    } else {
-      document.getElementById("login-error").textContent = "Incorrect email or password.";
-    }
-  });
-}
-
-function gnRenderAdminTable(){
+function gnRenderAdminTable(products){
   const tbody = document.getElementById("admin-tbody");
   if(!tbody) return;
-  const products = gnGetProducts();
   tbody.innerHTML = products.map(p => `
     <tr>
-      <td>${p.name}</td>
-      <td style="text-transform:capitalize;">${p.category}</td>
+      <td>${gnEsc(p.name)}${p.active ? "" : " <span class=\"p-cat\">(hidden)</span>"}</td>
+      <td style="text-transform:capitalize;">${gnEsc(p.category)}</td>
       <td>₹${p.price}</td>
-      <td>${p.burn}</td>
+      <td>${p.stock_qty}</td>
+      <td>${gnEsc(p.burn)}</td>
       <td>
         <div class="row-actions">
-          <button data-edit="${p.id}">Edit</button>
-          <button data-del="${p.id}" class="del">Delete</button>
+          <button data-edit="${gnEsc(p.id)}">Edit</button>
+          <button data-del="${gnEsc(p.id)}" class="del">Delete</button>
         </div>
       </td>
     </tr>
   `).join("");
 
   tbody.querySelectorAll("[data-edit]").forEach(btn => {
-    btn.addEventListener("click", () => gnOpenModal(btn.dataset.edit));
+    btn.addEventListener("click", () => gnOpenModal(products, btn.dataset.edit));
   });
   tbody.querySelectorAll("[data-del]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if(!confirm("Delete this product?")) return;
-      const list = gnGetProducts().filter(p => p.id !== btn.dataset.del);
-      gnSaveProducts(list);
-      gnRenderAdminTable();
+    btn.addEventListener("click", async () => {
+      if(!confirm("Delete this product? If it appears on past orders, hide it instead.")) return;
+      const sb = gnSupabase();
+      const { error } = await sb.from("products").delete().eq("id", btn.dataset.del);
+      if(error){
+        alert(error.message + " — set Active off to hide it from the shop instead.");
+        return;
+      }
+      await gnReloadAdmin();
     });
   });
 }
 
-function gnOpenModal(editId){
+function gnOpenModal(products, editId){
   const backdrop = document.getElementById("modal-backdrop");
   const form = document.getElementById("product-form");
   form.reset();
@@ -80,7 +74,7 @@ function gnOpenModal(editId){
   document.getElementById("modal-title").textContent = editId ? "Edit candle" : "Add new candle";
 
   if(editId){
-    const product = gnGetProducts().find(p => p.id === editId);
+    const product = products.find(p => p.id === editId);
     if(product){
       document.getElementById("f-name").value = product.name;
       document.getElementById("f-category").value = product.category;
@@ -89,9 +83,14 @@ function gnOpenModal(editId){
       document.getElementById("f-scent").value = product.scent;
       document.getElementById("f-desc").value = product.desc;
       document.getElementById("f-wax").value = product.wax;
+      document.getElementById("f-tag").value = product.tag || "";
+      document.getElementById("f-stock").value = product.stock_qty;
+      document.getElementById("f-active").checked = product.active;
     }
   } else {
     document.getElementById("f-wax").value = "#a9793a";
+    document.getElementById("f-stock").value = "12";
+    document.getElementById("f-active").checked = true;
   }
   backdrop.classList.add("open");
 }
@@ -100,44 +99,90 @@ function gnCloseModal(){
   document.getElementById("modal-backdrop").classList.remove("open");
 }
 
-function gnInitAdminPanel(){
-  const table = document.getElementById("admin-tbody");
-  if(!table) return;
+async function gnReloadAdmin(){
+  const products = await gnFetchProducts({ includeInactive: true });
+  gnRenderAdminTable(products);
+  window._gnAdminProducts = products;
+}
 
-  gnRenderAdminTable();
+async function gnInitAdmin(){
+  const form = document.getElementById("admin-login-form");
+  if(!form) return;
 
-  document.getElementById("add-product-btn").addEventListener("click", () => gnOpenModal(null));
+  if(!gnConfigReady()){
+    document.getElementById("login-error").textContent = "Add your Supabase URL and anon key in config.js first.";
+    return;
+  }
+
+  const sb = gnSupabase();
+  const session = await gnRequireAdmin(sb);
+  if(session){
+    gnShowAdmin(true, session.user.email);
+    await gnReloadAdmin();
+  } else {
+    gnShowAdmin(false);
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("login-email").value;
+    const pass = document.getElementById("login-pass").value;
+    const err = document.getElementById("login-error");
+    err.textContent = "";
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if(error){
+      err.textContent = error.message;
+      return;
+    }
+    const next = await gnRequireAdmin(sb);
+    if(!next) return;
+    gnShowAdmin(true, next.user.email);
+    await gnReloadAdmin();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    window.location.reload();
+  });
+
+  document.getElementById("add-product-btn").addEventListener("click", () => {
+    gnOpenModal(window._gnAdminProducts || [], null);
+  });
   document.getElementById("modal-cancel").addEventListener("click", gnCloseModal);
-  document.getElementById("logout-btn").addEventListener("click", gnAdminLogout);
 
-  document.getElementById("product-form").addEventListener("submit", (e) => {
+  document.getElementById("product-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const mode = document.getElementById("form-mode").value;
     const id = document.getElementById("form-id").value;
-    const data = {
+    const row = {
       name: document.getElementById("f-name").value.trim(),
       category: document.getElementById("f-category").value,
       price: Number(document.getElementById("f-price").value),
       burn: document.getElementById("f-burn").value.trim(),
       scent: document.getElementById("f-scent").value.trim(),
       desc: document.getElementById("f-desc").value.trim(),
-      wax: document.getElementById("f-wax").value.trim() || "#a9793a"
+      wax: document.getElementById("f-wax").value.trim() || "#a9793a",
+      tag: document.getElementById("f-tag").value.trim() || null,
+      stock_qty: Number(document.getElementById("f-stock").value),
+      active: document.getElementById("f-active").checked
     };
 
-    let products = gnGetProducts();
+    let error;
     if(mode === "edit"){
-      products = products.map(p => p.id === id ? { ...p, ...data } : p);
+      ({ error } = await sb.from("products").update(row).eq("id", id));
     } else {
-      data.id = "gn-" + Date.now();
-      products.push(data);
+      row.id = "gn-" + Date.now();
+      ({ error } = await sb.from("products").insert(row));
     }
-    gnSaveProducts(products);
+    if(error){
+      alert(error.message);
+      return;
+    }
     gnCloseModal();
-    gnRenderAdminTable();
+    await gnReloadAdmin();
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  gnInitAdminLogin();
-  gnInitAdminPanel();
+  gnInitAdmin();
 });

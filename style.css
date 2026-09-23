@@ -462,6 +462,7 @@ blockquote{
 .field textarea{ resize:vertical; min-height:80px; }
 .hint{ font-size:12px; color:var(--ink-soft); margin-top:14px; }
 .error-msg{ color:#a3433a; font-size:13px; margin-top:10px; min-height:16px; }
+.status-msg{ color:var(--ink-soft); font-size:13px; margin-top:10px; min-height:16px; }
 
 .admin-bar{
   background:var(--forest-dark); color:var(--cream);
@@ -496,3 +497,61 @@ table.admin-table tr:last-child td{ border-bottom:0; }
 .modal-actions{ display:flex; gap:12px; margin-top:22px; justify-content:flex-end; }
 
 .form-row-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+.btn:disabled{ opacity:0.5; cursor:not-allowed; pointer-events:none; }
+.p-tag.sold{ background:var(--forest-dark); }
+.empty-note{ color:var(--ink-soft); font-size:15px; max-width:48ch; }
+.empty-note a{ text-decoration:underline; color:var(--forest-dark); }
+.text-btn{ background:none; border:0; font-size:13px; color:#a3433a; padding:0; }
+.text-btn:hover{ text-decoration:underline; }
+
+.cart-layout, .checkout-layout{
+  display:grid;
+  grid-template-columns:1.4fr 0.8fr;
+  gap:40px;
+  align-items:start;
+}
+@media (max-width:860px){
+  .cart-layout, .checkout-layout{ grid-template-columns:1fr; }
+}
+.cart-list{ display:flex; flex-direction:column; gap:16px; }
+.cart-line{
+  display:grid;
+  grid-template-columns:88px 1fr auto auto auto;
+  gap:16px;
+  align-items:center;
+  background:var(--stone);
+  padding:14px 16px;
+  border-radius:var(--radius);
+}
+.cart-thumb{ width:88px; height:88px; overflow:hidden; }
+.cart-line-total{ font-weight:500; min-width:4.5ch; text-align:right; }
+@media (max-width:640px){
+  .cart-line{ grid-template-columns:72px 1fr auto; }
+  .cart-line-total, .cart-line .text-btn{ grid-column:2 / -1; }
+}
+
+.cart-summary{
+  background:var(--stone);
+  padding:28px 24px;
+  border-radius:var(--radius);
+}
+.sum-row{
+  display:flex; justify-content:space-between; gap:16px;
+  font-size:14.5px; margin-bottom:10px;
+}
+.sum-row.total{ border-top:1px solid var(--line); padding-top:12px; margin-top:8px; font-size:16px; }
+.cart-summary .btn{ margin-top:18px; width:100%; justify-content:center; }
+.checkout-form{ background:var(--stone); padding:32px 28px; border-radius:var(--radius); }
+.checkout-form .btn{ margin-top:8px; }
+
+.order-card{
+  max-width:560px;
+  background:var(--stone);
+  padding:40px 36px;
+  border-radius:var(--radius);
+}
+.order-card h1{ font-size:clamp(26px,3.2vw,34px); margin:8px 0 16px; }
+.order-card .btn{ margin-top:22px; }
+
+.field input[type="checkbox"]{ width:auto; margin-right:8px; }

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — GlowNest</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">GlowNest</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="catalogue.html">Catalogue</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#gallery">Journal</a></li>
+    </ul>
+    <div class="nav-right">
+      <a class="icon-btn" href="cart.html" aria-label="View cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l1.5 3"/></svg>
+        <span class="cart-count" data-cart-count style="display:none;">0</span>
+      </a>
+      <button class="nav-toggle" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="wrap">
+    <span class="section-kicker">Guest checkout</span>
+    <h1>Where should this go?</h1>
+    <p>Pay with UPI, cards, or netbanking via Razorpay. Totals are calculated on the server from live prices and stock.</p>
+  </div>
+</header>
+
+<section class="pad tight">
+  <div class="wrap checkout-layout">
+    <form id="checkout-form" class="checkout-form">
+      <div class="field">
+        <label for="c-name">Full name</label>
+        <input type="text" id="c-name" required autocomplete="name">
+      </div>
+      <div class="form-row-2">
+        <div class="field">
+          <label for="c-email">Email</label>
+          <input type="email" id="c-email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="c-phone">Phone</label>
+          <input type="tel" id="c-phone" required autocomplete="tel">
+        </div>
+      </div>
+      <div class="field">
+        <label for="c-line1">Address</label>
+        <input type="text" id="c-line1" required autocomplete="address-line1">
+      </div>
+      <div class="field">
+        <label for="c-line2">Apartment, landmark (optional)</label>
+        <input type="text" id="c-line2" autocomplete="address-line2">
+      </div>
+      <div class="form-row-2">
+        <div class="field">
+          <label for="c-city">City</label>
+          <input type="text" id="c-city" required autocomplete="address-level2">
+        </div>
+        <div class="field">
+          <label for="c-state">State</label>
+          <input type="text" id="c-state" required autocomplete="address-level1">
+        </div>
+      </div>
+      <div class="field">
+        <label for="c-pin">PIN code</label>
+        <input type="text" id="c-pin" required autocomplete="postal-code" inputmode="numeric">
+      </div>
+      <button type="submit" class="btn btn-gold">Pay with Razorpay</button>
+      <div class="status-msg" id="checkout-status"></div>
+    </form>
+    <aside class="cart-summary" id="checkout-summary"></aside>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4 style="font-family:var(--serif); font-style:italic; font-size:20px;">GlowNest</h4>
+        <p>Hand-poured candles, made in small batches. Warm, considered, and a little bit slow — on purpose.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <a href="catalogue.html?cat=floral">Floral</a>
+        <a href="catalogue.html?cat=dessert">Dessert</a>
+        <a href="catalogue.html?cat=classic">Classic</a>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <a href="index.html#about">Our story</a>
+        <a href="index.html#gallery">Journal</a>
+      </div>
+      <div>
+        <h4>Stay in touch</h4>
+        <p>DMs open for early access to new pours and restocks.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 GlowNest. All rights reserved.</span>
+      <span>Made with care, one jar at a time.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10"></script>
+<script src="config.js"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
