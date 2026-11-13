@@ -3,127 +3,276 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — GlowNest</title>
-<link rel="stylesheet" href="style.css">
+<title>Studio Admin — GlowNest</title>
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
 <div class="admin-shell" id="admin-shell">
 
-  <!-- Logged-out state -->
-  <div id="admin-logged-out">
+  <div id="admin-loading" class="wrap" style="padding:90px 0;">
+    <p class="empty-note">Checking studio access…</p>
+  </div>
+
+  <div id="admin-logged-out" style="display:none;">
     <nav class="site-nav">
       <div class="wrap">
         <a href="index.html" class="logo">GlowNest</a>
-        <span style="font-size:13px; color:var(--ink-soft);">Studio Admin</span>
+        <span style="font-size:13px; color:var(--ink-soft);">Studio Owner Portal</span>
       </div>
     </nav>
     <div class="admin-login">
-      <h1>Studio login</h1>
-      <p>Manage GlowNest's catalogue — add new pours, update prices, retire old scents.</p>
+      <h1>Studio owner sign-in</h1>
+      <p>Add newly poured candles, upload photos, update stock, and track paid orders.</p>
+
+      <div id="admin-file-warning" class="auth-alert" style="display:none;">
+        Google sign-in requires opening this page over a web URL (such as <code>http://localhost:3000/admin.html</code>), not directly from a <code>file://</code> path.
+      </div>
+
+      <button type="button" class="btn btn-google" id="admin-google-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+          <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <div class="admin-login-divider">or studio email &amp; password</div>
+
       <form id="admin-login-form">
         <div class="field">
           <label for="login-email">Email</label>
-          <input type="email" id="login-email" placeholder="divya@glownest.studio" required>
+          <input type="email" id="login-email" placeholder="owner@glownest.studio" required autocomplete="email">
         </div>
         <div class="field">
           <label for="login-pass">Password</label>
-          <input type="password" id="login-pass" placeholder="••••••••" required>
+          <input type="password" id="login-pass" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-gold" style="width:100%; justify-content:center;">Log in</button>
-        <div class="error-msg" id="login-error"></div>
+        <button type="submit" class="btn btn-line" style="width:100%; justify-content:center;">Log in with password</button>
       </form>
-      <p class="hint">Demo credentials — <strong>divya@glownest.studio</strong> / <strong>glownest2026</strong>. This is a front-end prototype: the login check and product table run in your browser only (via localStorage), nothing is sent to a server. A production build would swap this for real authentication and a database.</p>
+
+      <div class="error-msg" id="login-error"></div>
+      <p class="hint">Access is restricted to accounts authorized in Supabase <code>admin_users</code>. <a href="index.html" style="text-decoration:underline; color:var(--forest-dark);">Return to shop</a></p>
     </div>
   </div>
 
-  <!-- Logged-in state -->
+  <div id="admin-denied" style="display:none;">
+    <nav class="site-nav">
+      <div class="wrap">
+        <a href="index.html" class="logo">GlowNest</a>
+        <span style="font-size:13px; color:var(--ink-soft);">Studio Owner Portal</span>
+      </div>
+    </nav>
+    <div class="admin-login">
+      <h1>Owner access required</h1>
+      <p>Signed in as <strong id="admin-denied-email"></strong>, which is not listed as a studio owner in <code>admin_users</code>.</p>
+      <p class="hint" style="margin-top:0; margin-bottom:22px;">Switch to your owner Google account, or authorize this account in Supabase SQL Editor using <code>supabase/add_admin.sql</code>.</p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button type="button" class="btn btn-gold" id="admin-switch-btn" style="width:100%; justify-content:center;">Switch account</button>
+        <a href="index.html" class="btn btn-line" style="width:100%; justify-content:center;">Back to shop</a>
+      </div>
+    </div>
+  </div>
+
   <div id="admin-logged-in" style="display:none;">
     <div class="admin-bar">
       <div class="wrap">
-        <a href="index.html" class="logo">GlowNest</a>
-        <div style="display:flex; align-items:center; gap:18px;">
-          <span style="font-size:13px; color:rgba(246,241,230,0.7);">divya@glownest.studio</span>
-          <button class="btn btn-cream" id="logout-btn" style="padding:8px 18px; font-size:13px;">Log out</button>
+        <a href="index.html" class="logo">GlowNest <span style="font-family:var(--sans); font-size:12px; opacity:0.65; margin-left:6px;">Studio</span></a>
+        <div class="admin-bar-actions">
+          <a href="index.html" target="_blank" rel="noopener" class="admin-shop-link">View live shop ↗</a>
+          <span id="admin-email-label" style="font-size:13px; color:rgba(246,241,230,0.78);"></span>
+          <button type="button" class="btn btn-cream" id="logout-btn" style="padding:8px 18px; font-size:13px;">Log out</button>
         </div>
       </div>
     </div>
 
     <div class="wrap admin-body">
-      <div class="admin-toolbar">
-        <h1>Product catalogue</h1>
-        <button class="btn btn-gold" id="add-product-btn">+ Add candle</button>
+      <div class="admin-tabs">
+        <button type="button" class="admin-tab active" data-tab="candles">
+          Candles <span class="tab-badge" id="candles-count-badge">0</span>
+        </button>
+        <button type="button" class="admin-tab" data-tab="orders">
+          Orders &amp; Dispatch <span class="tab-badge" id="orders-pending-badge" style="display:none;">0</span>
+        </button>
       </div>
 
-      <table class="admin-table">
-        <thead>
-          <tr><th>Name</th><th>Category</th><th>Price</th><th>Burn time</th><th>Actions</th></tr>
-        </thead>
-        <tbody id="admin-tbody"></tbody>
-      </table>
+      <div class="admin-stats" id="admin-stats"></div>
+
+      <section id="panel-candles">
+        <div class="admin-toolbar">
+          <h1>Your candle shelf</h1>
+          <button type="button" class="btn btn-gold" id="add-product-btn">+ Add new candle</button>
+        </div>
+
+        <div class="admin-filters">
+          <div class="filter-pills">
+            <button type="button" class="pill active" data-candle-filter="all">All</button>
+            <button type="button" class="pill" data-candle-filter="rose">Rose</button>
+            <button type="button" class="pill" data-candle-filter="lavender">Lavender</button>
+            <button type="button" class="pill" data-candle-filter="jasmine">Jasmine</button>
+            <button type="button" class="pill" data-candle-filter="tea-tree">Tea-Tree</button>
+            <button type="button" class="pill" data-candle-filter="hidden">Hidden</button>
+            <button type="button" class="pill" data-candle-filter="low">Low / Out</button>
+          </div>
+          <input type="search" id="candle-search" class="admin-search" placeholder="Search name, scent, or ID…">
+        </div>
+
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Candle</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Burn time</th>
+                <th>Shop visibility</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="panel-orders" style="display:none;">
+        <div class="admin-toolbar">
+          <h1>Customer orders &amp; dispatch</h1>
+          <button type="button" class="btn btn-line" id="refresh-orders-btn" style="padding:10px 20px;">Refresh orders</button>
+        </div>
+
+        <div class="admin-filters">
+          <div class="filter-pills">
+            <button type="button" class="pill active" data-order-filter="to_pack">To pack</button>
+            <button type="button" class="pill" data-order-filter="paid">All paid</button>
+            <button type="button" class="pill" data-order-filter="all">All orders</button>
+            <button type="button" class="pill" data-order-filter="other">Pending / Failed</button>
+          </div>
+        </div>
+
+        <div class="admin-orders-list" id="admin-orders-list"></div>
+      </section>
     </div>
   </div>
 
 </div>
 
-<!-- Add/Edit modal -->
 <div class="modal-backdrop" id="modal-backdrop">
-  <div class="modal">
+  <div class="modal modal-wide">
     <h2 id="modal-title">Add new candle</h2>
     <form id="product-form">
       <input type="hidden" id="form-mode">
       <input type="hidden" id="form-id">
-      <div class="field">
-        <label for="f-name">Candle name</label>
-        <input type="text" id="f-name" required>
-      </div>
-      <div class="form-row-2">
-        <div class="field">
-          <label for="f-category">Category</label>
-          <select id="f-category" required>
-            <option value="floral">Floral</option>
-            <option value="dessert">Dessert</option>
-            <option value="classic">Classic</option>
-          </select>
+
+      <div class="modal-grid">
+        <div>
+          <div class="field">
+            <label for="f-image-file">Candle photo (optional — shows SVG illustration if left blank)</label>
+            <div class="photo-upload-box">
+              <input type="file" id="f-image-file" accept="image/jpeg,image/png,image/webp">
+              <button type="button" class="link-btn" id="f-image-clear" style="display:none;">Remove photo</button>
+            </div>
+            <div class="photo-status" id="f-image-status">JPG, PNG, or WebP (max 5 MB). Large photos are resized cleanly before upload.</div>
+          </div>
+
+          <div class="field">
+            <label for="f-name">Candle name</label>
+            <input type="text" id="f-name" placeholder="e.g. Lavender Oat Latte" required>
+            <div class="admin-slug" id="f-slug-hint"></div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field">
+              <label for="f-category">Category</label>
+              <select id="f-category" required>
+                <option value="rose">Rose</option>
+                <option value="lavender">Lavender</option>
+                <option value="jasmine">Jasmine</option>
+                <option value="tea-tree">Tea-Tree</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-price">Price (₹)</label>
+              <input type="number" id="f-price" min="1" required placeholder="799">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field">
+              <label for="f-stock">Stock quantity</label>
+              <input type="number" id="f-stock" min="0" required>
+            </div>
+            <div class="field">
+              <label for="f-burn">Burn time</label>
+              <input type="text" id="f-burn" placeholder="e.g. 34–38 hrs" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-scent">Scent notes</label>
+            <input type="text" id="f-scent" placeholder="e.g. Fig, brown butter, honey" required>
+          </div>
+
+          <div class="field">
+            <label for="f-tag">Badge tag (optional)</label>
+            <input type="text" id="f-tag" placeholder="New, Bestseller, Limited Batch">
+            <div class="tag-presets">
+              <button type="button" class="tag-chip" data-tag-preset="New">New</button>
+              <button type="button" class="tag-chip" data-tag-preset="Bestseller">Bestseller</button>
+              <button type="button" class="tag-chip" data-tag-preset="Limited Batch">Limited Batch</button>
+              <button type="button" class="tag-chip" data-tag-preset="">None</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-wax">Wax colour (used for SVG fallback &amp; accent)</label>
+            <div class="wax-row">
+              <input type="color" id="f-wax-picker" value="#a9793a" aria-label="Pick wax colour">
+              <input type="text" id="f-wax" placeholder="#a9793a" value="#a9793a">
+            </div>
+            <div class="wax-swatches">
+              <button type="button" class="swatch-btn" data-wax-swatch="#c47a74" style="background:#c47a74;" title="Rose blush"></button>
+              <button type="button" class="swatch-btn" data-wax-swatch="#9c8fb4" style="background:#9c8fb4;" title="Soft lavender"></button>
+              <button type="button" class="swatch-btn" data-wax-swatch="#f6f1e6" style="background:#f6f1e6;" title="Jasmine cream"></button>
+              <button type="button" class="swatch-btn" data-wax-swatch="#8fae7c" style="background:#8fae7c;" title="Sage green"></button>
+              <button type="button" class="swatch-btn" data-wax-swatch="#bcdcc6" style="background:#bcdcc6;" title="Tea-tree mint"></button>
+              <button type="button" class="swatch-btn" data-wax-swatch="#c9a26a" style="background:#c9a26a;" title="Honey gold"></button>
+              <button type="button" class="swatch-btn" data-wax-swatch="#a9793a" style="background:#a9793a;" title="Warm amber"></button>
+              <button type="button" class="swatch-btn" data-wax-swatch="#5c6b52" style="background:#5c6b52;" title="Forest moss"></button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-desc">Description</label>
+            <textarea id="f-desc" placeholder="Describe the scent, jar finish, and mood…" required></textarea>
+          </div>
+
+          <div class="field">
+            <label><input type="checkbox" id="f-active" checked> Visible in shop immediately</label>
+          </div>
+          <div class="error-msg" id="modal-error"></div>
         </div>
-        <div class="field">
-          <label for="f-price">Price (₹)</label>
-          <input type="number" id="f-price" min="1" required>
-        </div>
+
+        <aside class="modal-preview-col">
+          <h3>Live storefront card preview</h3>
+          <div class="preview-card-wrap" id="modal-card-preview"></div>
+          <p class="hint" style="margin-top:12px;">Your new candle appears at the top of <strong>Catalogue</strong> and <strong>This week’s pour</strong> as soon as you save.</p>
+        </aside>
       </div>
-      <div class="field">
-        <label for="f-scent">Scent notes</label>
-        <input type="text" id="f-scent" placeholder="e.g. Fig, brown butter, honey" required>
-      </div>
-      <div class="form-row-2">
-        <div class="field">
-          <label for="f-burn">Burn time</label>
-          <input type="text" id="f-burn" placeholder="e.g. 34–38 hrs" required>
-        </div>
-        <div class="field">
-          <label for="f-wax">Wax colour (hex)</label>
-          <input type="text" id="f-wax" placeholder="#a9793a">
-        </div>
-      </div>
-      <div class="field">
-        <label for="f-desc">Description</label>
-        <textarea id="f-desc" required></textarea>
-      </div>
+
       <div class="modal-actions">
         <button type="button" class="btn btn-line" id="modal-cancel">Cancel</button>
-        <button type="submit" class="btn btn-gold">Save candle</button>
+        <button type="submit" class="btn btn-gold" id="modal-save-btn">Save candle</button>
       </div>
     </form>
   </div>
 </div>
 
-<script src="data.js"></script>
-<script src="admin.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("admin-logged-out").style.display = gnIsAdminAuthed() ? "none" : "block";
-    document.getElementById("admin-logged-in").style.display = gnIsAdminAuthed() ? "block" : "none";
-  });
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js?v=3"></script>
+<script src="supabase-client.js?v=5"></script>
+<script src="admin.js?v=5"></script>
 </body>
 </html>

@@ -1,0 +1,12 @@
+# Local / OS
+.env
+.env.*
+.DS_Store
+
+# Node
+node_modules/
+
+# Supabase CLI
+supabase/.temp
+supabase/.env
+supabase/functions/.env

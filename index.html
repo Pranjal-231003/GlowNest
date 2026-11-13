@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GlowNest — Hand-poured Scented Candles</title>
-<meta name="description" content="Hand-poured jar candles in floral, dessert, and classic styles, made in small batches by GlowNest.">
-<link rel="stylesheet" href="style.css">
+<meta name="description" content="Hand-poured jar candles in Rose, Lavender, Jasmine, and Tea-Tree scents, made in small batches by GlowNest.">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -19,10 +19,11 @@
       <li><a href="index.html#gallery">Journal</a></li>
     </ul>
     <div class="nav-right">
+      <a class="nav-auth-link" data-auth-link href="auth.html">Log in</a>
       <a class="icon-btn" href="catalogue.html" aria-label="Search catalogue">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       </a>
-      <a class="icon-btn" href="catalogue.html" aria-label="View cart">
+      <a class="icon-btn" href="cart.html" aria-label="View cart">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l1.5 3"/></svg>
         <span class="cart-count" data-cart-count style="display:none;">0</span>
       </a>
@@ -88,17 +89,21 @@
       </div>
     </div>
     <div class="cat-row">
-      <a class="cat-tile" href="catalogue.html?cat=floral" style="background:linear-gradient(135deg,#5c7a4a,#3a5940);">
-        <h3>Floral Candles</h3>
-        <span>Green, herbal, garden-fresh</span>
+      <a class="cat-tile" href="catalogue.html?cat=rose" style="background:linear-gradient(135deg,#8c4f49,#5e322e);">
+        <h3>Rose</h3>
+        <span>Soft petal warmth, lingering bloom</span>
       </a>
-      <a class="cat-tile" href="catalogue.html?cat=dessert" style="background:linear-gradient(135deg,#a9793a,#7a5527);">
-        <h3>Dessert Candles</h3>
-        <span>Warm, sweet, a little indulgent</span>
+      <a class="cat-tile" href="catalogue.html?cat=lavender" style="background:linear-gradient(135deg,#6f6482,#453d56);">
+        <h3>Lavender</h3>
+        <span>Calm, herbal, evening-quiet</span>
       </a>
-      <a class="cat-tile" href="catalogue.html?cat=classic" style="background:linear-gradient(135deg,#3a4a3a,#1f3324);">
-        <h3>Classic Jar Candles</h3>
-        <span>Quiet, everyday, reliable</span>
+      <a class="cat-tile" href="catalogue.html?cat=jasmine" style="background:linear-gradient(135deg,#a9793a,#7a5527);">
+        <h3>Jasmine</h3>
+        <span>Creamy, sunlit, gently sweet</span>
+      </a>
+      <a class="cat-tile" href="catalogue.html?cat=tea-tree" style="background:linear-gradient(135deg,#5c7a4a,#1f3324);">
+        <h3>Tea-Tree</h3>
+        <span>Crisp, green, garden-fresh</span>
       </a>
     </div>
   </div>
@@ -191,15 +196,15 @@
       </div>
       <div>
         <h4>Shop</h4>
-        <a href="catalogue.html?cat=floral">Floral</a>
-        <a href="catalogue.html?cat=dessert">Dessert</a>
-        <a href="catalogue.html?cat=classic">Classic</a>
+        <a href="catalogue.html?cat=rose">Rose</a>
+        <a href="catalogue.html?cat=lavender">Lavender</a>
+        <a href="catalogue.html?cat=jasmine">Jasmine</a>
+        <a href="catalogue.html?cat=tea-tree">Tea-Tree</a>
       </div>
       <div>
         <h4>Studio</h4>
         <a href="index.html#about">Our story</a>
         <a href="index.html#gallery">Journal</a>
-        <a href="admin.html">Admin</a>
       </div>
       <div>
         <h4>Stay in touch</h4>
@@ -213,7 +218,9 @@
   </div>
 </footer>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js?v=3"></script>
+<script src="supabase-client.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

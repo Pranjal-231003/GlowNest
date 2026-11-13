@@ -1,0 +1,18 @@
+-- Register or pre-authorize a studio owner / admin account.
+--
+-- Option A — Pre-authorize before their first Google OAuth sign-in:
+--   INSERT INTO private.admin_allowed_emails (email)
+--   VALUES ('owner@example.com')
+--   ON CONFLICT (email) DO NOTHING;
+--   (When they sign in with Google, on_auth_user_admin_allowlist promotes them automatically.)
+--
+-- Option B — Promote an existing user already in auth.users:
+--   INSERT INTO public.admin_users (user_id)
+--   SELECT id FROM auth.users WHERE lower(email) = 'owner@example.com'
+--   ON CONFLICT (user_id) DO NOTHING;
+--
+-- Option C — Revoke admin access immediately:
+--   DELETE FROM private.admin_allowed_emails WHERE lower(email) = 'owner@example.com';
+--   DELETE FROM public.admin_users WHERE user_id IN (
+--     SELECT id FROM auth.users WHERE lower(email) = 'owner@example.com'
+--   );
