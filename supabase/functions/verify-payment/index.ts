@@ -7,6 +7,19 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
+    const authHeader = req.headers.get("Authorization") || "";
+    const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!tokenMatch) {
+      return json({ error: "Please log in to confirm your payment." }, 401);
+    }
+
+    const sb = serviceClient();
+    const { data: authData, error: authErr } = await sb.auth.getUser(tokenMatch[1]);
+    const user = authData?.user;
+    if (authErr || !user) {
+      return json({ error: "Your session expired. Please log in again." }, 401);
+    }
+
     const body = await req.json();
     const orderId = String(body.orderId || "");
     const accessToken = String(body.accessToken || "");
@@ -26,14 +39,18 @@ Deno.serve(async (req) => {
       return json({ error: "Invalid payment signature" }, 401);
     }
 
-    const sb = serviceClient();
     const { data: order, error } = await sb
       .from("orders")
-      .select("id, access_token, razorpay_order_id")
+      .select("id, user_id, access_token, razorpay_order_id")
       .eq("id", orderId)
       .maybeSingle();
     if (error) return json({ error: error.message }, 500);
-    if (!order || order.access_token !== accessToken || order.razorpay_order_id !== razorpay_order_id) {
+    if (
+      !order ||
+      order.user_id !== user.id ||
+      order.access_token !== accessToken ||
+      order.razorpay_order_id !== razorpay_order_id
+    ) {
       return json({ error: "Order mismatch" }, 403);
     }
 

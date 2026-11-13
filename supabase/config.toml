@@ -3,11 +3,34 @@ project_id = "glownest"
 [api]
 enabled = true
 
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = [
+  "http://localhost:3000/**",
+  "http://127.0.0.1:3000/**",
+  "http://localhost:5500/**",
+  "http://127.0.0.1:5500/**",
+  "http://localhost:5173/**",
+  "http://127.0.0.1:5173/**",
+  "http://localhost:8000/**",
+  "http://127.0.0.1:8000/**",
+  "http://localhost:8080/**",
+  "http://127.0.0.1:8080/**",
+]
+enable_signup = true
+
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = false
+
 [functions.create-order]
-verify_jwt = false
+verify_jwt = true
 
 [functions.razorpay-webhook]
 verify_jwt = false
 
 [functions.verify-payment]
-verify_jwt = false
+verify_jwt = true

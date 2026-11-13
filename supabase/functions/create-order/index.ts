@@ -8,10 +8,23 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
+    const authHeader = req.headers.get("Authorization") || "";
+    const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!tokenMatch) {
+      return json({ error: "Please log in or sign up before placing an order." }, 401);
+    }
+
+    const sb = serviceClient();
+    const { data: authData, error: authErr } = await sb.auth.getUser(tokenMatch[1]);
+    const user = authData?.user;
+    if (authErr || !user) {
+      return json({ error: "Your session expired. Please log in again." }, 401);
+    }
+
     const body = await req.json();
     const cart = Array.isArray(body.cart) ? (body.cart as CartLine[]) : [];
     const customer_name = String(body.customer_name || "").trim();
-    const email = String(body.email || "").trim();
+    const email = String(body.email || user.email || "").trim();
     const phone = String(body.phone || "").trim();
     const address_line1 = String(body.address_line1 || "").trim();
     const address_line2 = String(body.address_line2 || "").trim();
@@ -36,7 +49,6 @@ Deno.serve(async (req) => {
     }
 
     const ids = [...qtyById.keys()];
-    const sb = serviceClient();
     const { data: products, error: prodErr } = await sb
       .from("products")
       .select("id, name, price, stock_qty, active")
@@ -58,9 +70,33 @@ Deno.serve(async (req) => {
     }
     const total_paise = totalRupees * 100;
 
+    const keyId = Deno.env.get("RAZORPAY_KEY_ID");
+    const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+    if (!keyId || !keySecret) return json({ error: "Payments are not configured" }, 500);
+
+    const { error: custErr } = await sb
+      .from("customers")
+      .upsert(
+        {
+          id: user.id,
+          email: (user.email || email).trim(),
+          full_name: customer_name,
+          phone,
+          address_line1,
+          address_line2: address_line2 || null,
+          city,
+          state,
+          pincode,
+        },
+        { onConflict: "id" },
+      );
+
+    if (custErr) return json({ error: custErr.message }, 500);
+
     const { data: order, error: orderErr } = await sb
       .from("orders")
       .insert({
+        user_id: user.id,
         customer_name,
         email,
         phone,
@@ -85,10 +121,6 @@ Deno.serve(async (req) => {
       return json({ error: itemErr.message }, 500);
     }
 
-    const keyId = Deno.env.get("RAZORPAY_KEY_ID");
-    const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
-    if (!keyId || !keySecret) return json({ error: "Payments are not configured" }, 500);
-
     const auth = btoa(`${keyId}:${keySecret}`);
     const rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
@@ -100,7 +132,7 @@ Deno.serve(async (req) => {
         amount: total_paise,
         currency: "INR",
         receipt: order.id.slice(0, 40),
-        notes: { glownest_order_id: order.id },
+        notes: { glownest_order_id: order.id, user_id: user.id },
       }),
     });
     const rzp = await rzpRes.json();

@@ -24,7 +24,7 @@ CREATE TABLE public.products (
 
 CREATE TABLE public.orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  access_token text NOT NULL DEFAULT encode(gen_random_bytes(16), 'hex'),
+  access_token text NOT NULL DEFAULT encode(extensions.gen_random_bytes(16), 'hex'),
   customer_name text NOT NULL,
   email text NOT NULL,
   phone text NOT NULL,
@@ -53,6 +53,7 @@ CREATE TABLE public.order_items (
 );
 
 CREATE INDEX order_items_order_id_idx ON public.order_items (order_id);
+CREATE INDEX order_items_product_id_idx ON public.order_items (product_id);
 
 INSERT INTO public.products (id, name, category, price, tag, wax, scent, burn, "desc", stock_qty, active) VALUES
   ('gn-01', 'Green Garden', 'floral', 899, 'New', '#8fae7c', 'Eucalyptus, fresh mint, white musk', '38–42 hrs',
@@ -79,10 +80,10 @@ RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()
+    SELECT 1 FROM public.admin_users WHERE user_id = (SELECT auth.uid())
   );
 $$;
 
@@ -90,7 +91,7 @@ CREATE OR REPLACE FUNCTION public.fulfill_paid_order(p_order_id uuid, p_payment_
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   r public.orders%ROWTYPE;
@@ -133,7 +134,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   result jsonb;
@@ -179,24 +180,28 @@ ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY admin_users_self_read ON public.admin_users
   FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (SELECT auth.uid()));
 
-CREATE POLICY products_public_read ON public.products
-  FOR SELECT TO anon, authenticated
-  USING (active = true OR public.is_admin());
+CREATE POLICY products_anon_read ON public.products
+  FOR SELECT TO anon
+  USING (active = true);
+
+CREATE POLICY products_authenticated_read ON public.products
+  FOR SELECT TO authenticated
+  USING (active = true OR (SELECT public.is_admin()));
 
 CREATE POLICY products_admin_insert ON public.products
   FOR INSERT TO authenticated
-  WITH CHECK (public.is_admin());
+  WITH CHECK ((SELECT public.is_admin()));
 
 CREATE POLICY products_admin_update ON public.products
   FOR UPDATE TO authenticated
-  USING (public.is_admin())
-  WITH CHECK (public.is_admin());
+  USING ((SELECT public.is_admin()))
+  WITH CHECK ((SELECT public.is_admin()));
 
 CREATE POLICY products_admin_delete ON public.products
   FOR DELETE TO authenticated
-  USING (public.is_admin());
+  USING ((SELECT public.is_admin()));
 
 -- orders / order_items: no direct client policies; Edge Functions use the service role.
 
@@ -204,7 +209,10 @@ GRANT SELECT ON public.products TO anon, authenticated;
 GRANT INSERT, UPDATE, DELETE ON public.products TO authenticated;
 GRANT SELECT ON public.admin_users TO authenticated;
 
-GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+
+REVOKE ALL ON FUNCTION public.get_order_public(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_order_public(uuid, text) TO anon, authenticated;
 
 REVOKE ALL ON FUNCTION public.fulfill_paid_order(uuid, text) FROM PUBLIC, anon, authenticated;

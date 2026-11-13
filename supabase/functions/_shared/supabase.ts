@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.10";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 
 /* Resolve a Supabase secret key (the RLS-bypassing credential used by the functions).
    Hosted Edge Functions inject named keys as a JSON object, the local CLI stack

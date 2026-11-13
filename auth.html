@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — GlowNest</title>
+<link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">GlowNest</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="catalogue.html">Catalogue</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#gallery">Journal</a></li>
+    </ul>
+    <div class="nav-right">
+      <a class="nav-auth-link" data-auth-link href="auth.html">Log in</a>
+      <a class="icon-btn" href="cart.html" aria-label="View cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l1.5 3"/></svg>
+        <span class="cart-count" data-cart-count style="display:none;">0</span>
+      </a>
+      <button class="nav-toggle" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="wrap">
+    <span class="section-kicker">Your GlowNest account</span>
+    <h1 id="auth-heading">Sign in to continue</h1>
+    <p id="auth-sub">Save your delivery details, track orders, and finish checkout smoothly.</p>
+  </div>
+</header>
+
+<section class="pad tight">
+  <div class="wrap">
+    <div class="auth-wrap" id="auth-root">
+      <div class="auth-card">
+        <h2>Continue with Google</h2>
+        <p class="auth-card-sub" id="auth-card-sub">Sign in or create your GlowNest account in one click using Google.</p>
+
+        <div id="auth-file-warning" class="auth-alert" style="display:none;">
+          Google sign-in requires opening this website over a local or hosted web URL (such as <code>http://localhost:3000</code>), not directly from a <code>file://</code> path.
+        </div>
+
+        <button type="button" class="btn btn-google" id="google-auth-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <p class="auth-note">New customers are automatically registered and saved when they sign in.</p>
+        <div id="auth-message" class="status-msg" style="text-align:center;"></div>
+        <div class="auth-footer-link">
+          <a id="auth-back-link" href="cart.html">Return to cart</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4 style="font-family:var(--serif); font-style:italic; font-size:20px;">GlowNest</h4>
+        <p>Hand-poured candles, made in small batches. Warm, considered, and a little bit slow — on purpose.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <a href="catalogue.html?cat=rose">Rose</a>
+        <a href="catalogue.html?cat=lavender">Lavender</a>
+        <a href="catalogue.html?cat=jasmine">Jasmine</a>
+        <a href="catalogue.html?cat=tea-tree">Tea-Tree</a>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <a href="index.html#about">Our story</a>
+        <a href="index.html#gallery">Journal</a>
+      </div>
+      <div>
+        <h4>Stay in touch</h4>
+        <p>DMs open for early access to new pours and restocks.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 GlowNest. All rights reserved.</span>
+      <span>Made with care, one jar at a time.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js?v=3"></script>
+<script src="supabase-client.js?v=5"></script>
+<script src="app.js?v=5"></script>
+</body>
+</html>

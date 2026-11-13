@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account — GlowNest</title>
+<link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">GlowNest</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="catalogue.html">Catalogue</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#gallery">Journal</a></li>
+    </ul>
+    <div class="nav-right">
+      <a class="nav-auth-link" data-auth-link href="account.html">Account</a>
+      <a class="icon-btn" href="cart.html" aria-label="View cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l1.5 3"/></svg>
+        <span class="cart-count" data-cart-count style="display:none;">0</span>
+      </a>
+      <button class="nav-toggle" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="wrap">
+    <span class="section-kicker">Customer profile</span>
+    <h1>My Account</h1>
+    <p>Manage your saved delivery information and view past orders.</p>
+  </div>
+</header>
+
+<section class="pad tight">
+  <div class="wrap" id="account-loading">
+    <p class="empty-note">Checking your account…</p>
+  </div>
+  <div class="wrap" id="account-root" style="display:none;">
+    <div class="account-top">
+      <div>
+        <div style="font-size:13px; color:var(--ink-soft);">Signed in as</div>
+        <strong id="account-email-banner"></strong>
+      </div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <a href="checkout.html" class="btn btn-gold" id="account-checkout-cta" style="display:none; padding:10px 18px;">Continue to checkout</a>
+        <button type="button" class="btn btn-line" id="account-logout-btn" style="padding:10px 18px;">Log out</button>
+      </div>
+    </div>
+
+    <div class="account-layout">
+      <div class="account-panel">
+        <h2>Saved delivery details</h2>
+        <form id="profile-form">
+          <div class="field">
+            <label for="a-email">Email</label>
+            <input type="email" id="a-email" disabled>
+          </div>
+          <div class="form-row-2">
+            <div class="field">
+              <label for="a-name">Full name</label>
+              <input type="text" id="a-name" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="a-phone">Phone</label>
+              <input type="tel" id="a-phone" autocomplete="tel">
+            </div>
+          </div>
+          <div class="field">
+            <label for="a-line1">Address</label>
+            <input type="text" id="a-line1" autocomplete="address-line1">
+          </div>
+          <div class="field">
+            <label for="a-line2">Apartment, landmark (optional)</label>
+            <input type="text" id="a-line2" autocomplete="address-line2">
+          </div>
+          <div class="form-row-2">
+            <div class="field">
+              <label for="a-city">City</label>
+              <input type="text" id="a-city" autocomplete="address-level2">
+            </div>
+            <div class="field">
+              <label for="a-state">State</label>
+              <input type="text" id="a-state" autocomplete="address-level1">
+            </div>
+          </div>
+          <div class="field">
+            <label for="a-pin">PIN code</label>
+            <input type="text" id="a-pin" autocomplete="postal-code" inputmode="numeric">
+          </div>
+          <button type="submit" class="btn btn-gold">Save details</button>
+          <div id="profile-status" class="status-msg"></div>
+        </form>
+      </div>
+
+      <div class="account-panel">
+        <h2>My orders</h2>
+        <div id="account-orders" class="order-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4 style="font-family:var(--serif); font-style:italic; font-size:20px;">GlowNest</h4>
+        <p>Hand-poured candles, made in small batches. Warm, considered, and a little bit slow — on purpose.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <a href="catalogue.html?cat=rose">Rose</a>
+        <a href="catalogue.html?cat=lavender">Lavender</a>
+        <a href="catalogue.html?cat=jasmine">Jasmine</a>
+        <a href="catalogue.html?cat=tea-tree">Tea-Tree</a>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <a href="index.html#about">Our story</a>
+        <a href="index.html#gallery">Journal</a>
+      </div>
+      <div>
+        <h4>Stay in touch</h4>
+        <p>DMs open for early access to new pours and restocks.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 GlowNest. All rights reserved.</span>
+      <span>Made with care, one jar at a time.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js?v=3"></script>
+<script src="supabase-client.js?v=5"></script>
+<script>if(typeof gnEarlyProtectPage==="function")gnEarlyProtectPage("account.html");</script>
+<script src="app.js?v=5"></script>
+</body>
+</html>
