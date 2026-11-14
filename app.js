@@ -1419,7 +1419,33 @@ async function gnInitProductReviews(product){
   renderList();
 }
 
+function gnInitPreloader(){
+  const preloader = document.getElementById("site-preloader");
+  if(!preloader) return;
+
+  let dismissed = false;
+  function dismiss(){
+    if(dismissed) return;
+    dismissed = true;
+    preloader.classList.add("fade-out");
+    setTimeout(() => {
+      preloader.style.display = "none";
+      try { preloader.remove(); } catch(_e){}
+    }, 450);
+  }
+
+  if(document.readyState === "complete"){
+    setTimeout(dismiss, 500);
+  } else {
+    window.addEventListener("load", () => {
+      setTimeout(dismiss, 400);
+    });
+    setTimeout(dismiss, 2000);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  gnInitPreloader();
   gnInitNav();
   gnInitNavAuth();
   gnUpdateCartCount();

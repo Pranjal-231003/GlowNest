@@ -1255,3 +1255,154 @@ table.admin-table tr:last-child td{ border-bottom:0; }
 .fulfill-box .field{ margin-bottom:12px; }
 .fulfill-box-actions{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .fulfill-msg{ font-size:12.5px; color:var(--forest-mid); }
+
+/* ============================================================
+   SITE PRELOADER (Vinod Jangid Truck Loader · uiverse.io/vinodjangid07/popular-owl-27)
+   ============================================================ */
+.site-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  pointer-events: all;
+}
+
+.site-preloader.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.preloader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.preloader-brand {
+  text-align: center;
+}
+
+.preloader-title {
+  display: block;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 24px;
+  color: var(--forest-dark);
+  letter-spacing: 0.02em;
+}
+
+.preloader-sub {
+  display: block;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+.site-preloader .loader {
+  width: fit-content;
+  height: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.site-preloader .truckWrapper {
+  width: 200px;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  align-items: center;
+  justify-content: flex-end;
+  overflow-x: hidden;
+}
+
+.site-preloader .truckBody {
+  width: 130px;
+  height: fit-content;
+  margin-bottom: 6px;
+  animation: truckMotion 1s linear infinite;
+  will-change: transform;
+}
+
+@keyframes truckMotion {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(3px); }
+  100% { transform: translateY(0px); }
+}
+
+.site-preloader .truckTires {
+  width: 130px;
+  height: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 10px 0px 15px;
+  position: absolute;
+  bottom: 0;
+}
+
+.site-preloader .truckTires svg {
+  width: 24px;
+}
+
+.site-preloader .road {
+  width: 100%;
+  height: 1.5px;
+  background-color: #282828;
+  position: relative;
+  bottom: 0;
+  align-self: flex-end;
+  border-radius: 3px;
+}
+
+.site-preloader .road::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 100%;
+  background-color: #282828;
+  right: -50%;
+  border-radius: 3px;
+  animation: roadAnimation 1.4s linear infinite;
+  border-left: 10px solid var(--cream);
+  will-change: transform;
+}
+
+.site-preloader .road::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 100%;
+  background-color: #282828;
+  right: -65%;
+  border-radius: 3px;
+  animation: roadAnimation 1.4s linear infinite;
+  border-left: 4px solid var(--cream);
+  will-change: transform;
+}
+
+.site-preloader .lampPost {
+  position: absolute;
+  bottom: 0;
+  right: -90%;
+  height: 90px;
+  animation: roadAnimation 1.4s linear infinite;
+  will-change: transform;
+}
+
+@keyframes roadAnimation {
+  0% { transform: translateX(0px); }
+  100% { transform: translateX(-350px); }
+}
