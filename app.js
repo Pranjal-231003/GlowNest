@@ -1050,6 +1050,7 @@ async function gnInitOrder(){
           <a class="btn btn-line" style="margin-top:0;" href="catalogue.html">Continue shopping</a>
           ${user ? `<a class="btn btn-gold" style="margin-top:0;" href="account.html">View all my orders</a>` : ""}
         </div>
+        <p class="hint" style="margin-top:20px; font-size:12.5px;">Need support, return assistance, or delivery question? <a href="contact.html?order_id=${encodeURIComponent(order.id)}" style="text-decoration:underline; color:var(--forest-dark); font-weight:500;">Contact studio support</a>.</p>
       </div>`;
   }
 
@@ -1069,6 +1070,91 @@ async function gnInitOrder(){
   }
 }
 
+async function gnInitContact(){
+  const form = document.getElementById("contact-form");
+  if(!form) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const qOrderId = urlParams.get("order_id") || urlParams.get("id") || "";
+  const orderInput = document.getElementById("contact-order-id");
+  if(orderInput && qOrderId){
+    orderInput.value = qOrderId;
+  }
+
+  const nameInput = document.getElementById("contact-name");
+  const emailInput = document.getElementById("contact-email");
+  const reasonSelect = document.getElementById("contact-reason");
+  const msgInput = document.getElementById("contact-message");
+  const statusEl = document.getElementById("contact-status");
+  const copyBtn = document.getElementById("contact-copy-btn");
+
+  // Autofill name and email if user is already signed in
+  try{
+    const user = await gnGetUser().catch(() => null);
+    if(user){
+      if(emailInput && !emailInput.value && user.email) emailInput.value = user.email;
+      const fullName = gnUserFullName(user);
+      if(nameInput && !nameInput.value && fullName) nameInput.value = fullName;
+    }
+  }catch(_e){}
+
+  function buildEmailData(){
+    const name = nameInput ? nameInput.value.trim() : "";
+    const email = emailInput ? emailInput.value.trim() : "";
+    const orderId = orderInput ? orderInput.value.trim() : "";
+    const reason = reasonSelect ? reasonSelect.value : "Inquiry";
+    const details = msgInput ? msgInput.value.trim() : "";
+
+    const subject = `[GlowNest Support] ${reason}${orderId ? ` - Order #${orderId}` : ""}`;
+    const body = [
+      `Hello Divya / GlowNest Studio,`,
+      ``,
+      `I am writing regarding my inquiry / order support:`,
+      `Customer Name: ${name}`,
+      `Email Address: ${email}`,
+      `Order ID: ${orderId || "N/A"}`,
+      `Reason: ${reason}`,
+      ``,
+      `Details / Message:`,
+      `${details}`,
+      ``,
+      `(Sent from glownest.live contact form)`
+    ].join("\n");
+
+    return { subject, body };
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const { subject, body } = buildEmailData();
+    const mailtoUrl = `mailto:glownestscentedcandles@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+    if(statusEl){
+      statusEl.className = "success-msg";
+      statusEl.textContent = "Opening your email app to send to glownestscentedcandles@gmail.com…";
+    }
+  });
+
+  if(copyBtn){
+    copyBtn.addEventListener("click", async () => {
+      const { subject, body } = buildEmailData();
+      const fullText = `To: glownestscentedcandles@gmail.com\nSubject: ${subject}\n\n${body}`;
+      try{
+        await navigator.clipboard.writeText(fullText);
+        if(statusEl){
+          statusEl.className = "success-msg";
+          statusEl.textContent = "Copied message details! You can now paste into Gmail/webmail.";
+        }
+      }catch(_e){
+        if(statusEl){
+          statusEl.className = "error-msg";
+          statusEl.textContent = "Could not copy automatically. You can email glownestscentedcandles@gmail.com directly.";
+        }
+      }
+    });
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   gnInitNav();
   gnInitNavAuth();
@@ -1081,4 +1167,5 @@ document.addEventListener("DOMContentLoaded", () => {
   gnInitAccount();
   gnInitCheckout();
   gnInitOrder();
+  gnInitContact();
 });
