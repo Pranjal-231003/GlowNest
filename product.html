@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product — GlowNest</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -42,6 +42,7 @@
     <div class="breadcrumb"><a href="index.html">Home</a> / <a href="catalogue.html">Catalogue</a> / <span id="crumb-name"></span></div>
     <div class="p-cat" id="p-cat"></div>
     <h1 id="p-name"></h1>
+    <div class="product-rating-badge" id="product-rating-badge" style="display:none;"></div>
     <div class="price" id="p-price"></div>
     <p class="desc" id="p-desc"></p>
 
@@ -69,6 +70,66 @@
       <button class="btn btn-gold" id="add-cart-btn">Add to Cart</button>
     </div>
     <div class="add-msg" id="add-msg"></div>
+  </div>
+</section>
+
+<section class="pad tight" id="product-reviews-section" style="background:var(--stone); margin:20px 0 60px;">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker">Customer reviews</span>
+        <h2>Ratings &amp; Reviews</h2>
+      </div>
+      <button type="button" class="btn btn-gold" id="open-review-form-btn">Write a review</button>
+    </div>
+
+    <div class="reviews-summary" id="reviews-summary"></div>
+
+    <div class="review-form-wrap" id="review-form-wrap" style="display:none;">
+      <form class="review-form" id="candle-review-form">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="margin:0; font-size:20px;">Share your experience</h3>
+          <button type="button" class="text-btn" id="close-review-form-btn">Cancel</button>
+        </div>
+        <p class="hint" style="margin-top:0; margin-bottom:20px;">Your rating helps other candle lovers find their signature scent.</p>
+
+        <div class="field">
+          <label>Your rating</label>
+          <div class="star-picker" id="star-picker">
+            <button type="button" class="star-btn" data-star="1" aria-label="1 star">★</button>
+            <button type="button" class="star-btn" data-star="2" aria-label="2 stars">★</button>
+            <button type="button" class="star-btn" data-star="3" aria-label="3 stars">★</button>
+            <button type="button" class="star-btn" data-star="4" aria-label="4 stars">★</button>
+            <button type="button" class="star-btn active" data-star="5" aria-label="5 stars">★</button>
+            <span class="star-label" id="star-label">5 of 5 stars — Loved it!</span>
+          </div>
+          <input type="hidden" id="f-review-rating" value="5">
+        </div>
+
+        <div class="form-row-2">
+          <div class="field">
+            <label for="f-review-name">Your name</label>
+            <input type="text" id="f-review-name" placeholder="e.g. Ananya R." required>
+          </div>
+          <div class="field">
+            <label for="f-review-title">Review headline (optional)</label>
+            <input type="text" id="f-review-title" placeholder="e.g. Calming scent, burns so evenly">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-review-comment">Review details</label>
+          <textarea id="f-review-comment" placeholder="What did you love about the scent throw, burn time, or wax finish?" required style="min-height:100px;"></textarea>
+        </div>
+
+        <div class="contact-actions">
+          <button type="submit" class="btn btn-gold" id="submit-review-btn">Submit review</button>
+        </div>
+        <div class="status-msg" id="review-status" style="margin-top:12px;"></div>
+      </form>
+    </div>
+
+    <div class="reviews-list" id="reviews-list"></div>
   </div>
 </section>
 
@@ -118,7 +179,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="config.js?v=3"></script>
-<script src="supabase-client.js?v=5"></script>
-<script src="app.js?v=5"></script>
+<script src="supabase-client.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

@@ -315,3 +315,57 @@ function gnOnCatalogChanged(callback){
     window.removeEventListener("storage", onStorage);
   };
 }
+
+function gnRenderStars(rating){
+  const r = Math.max(1, Math.min(5, Math.round(Number(rating) || 5)));
+  const gold = "★".repeat(r);
+  const empty = "★".repeat(5 - r);
+  return `<span class="stars-gold">${gold}</span><span class="stars-empty">${empty}</span>`;
+}
+
+async function gnFetchLatestGoodReviews(limit = 3){
+  const sb = gnSupabase();
+  if(!sb) return [];
+  try{
+    const { data, error } = await sb
+      .from("reviews")
+      .select("id, product_id, customer_name, rating, title, comment, verified_purchase, created_at, products(id, name, category, wax, image_url)")
+      .eq("approved", true)
+      .gte("rating", 4)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if(error) return [];
+    return data || [];
+  }catch(_e){
+    return [];
+  }
+}
+
+async function gnFetchProductReviews(productId){
+  const sb = gnSupabase();
+  if(!sb || !productId) return [];
+  try{
+    const { data, error } = await sb
+      .from("reviews")
+      .select("*")
+      .eq("product_id", productId)
+      .eq("approved", true)
+      .order("created_at", { ascending: false });
+    if(error) return [];
+    return data || [];
+  }catch(_e){
+    return [];
+  }
+}
+
+async function gnSubmitReview(reviewData){
+  const sb = gnSupabase();
+  if(!sb) throw new Error("not-configured");
+  const { data, error } = await sb
+    .from("reviews")
+    .insert(reviewData)
+    .select()
+    .single();
+  if(error) throw error;
+  return data;
+}

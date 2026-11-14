@@ -398,9 +398,38 @@ blockquote{
 }
 .testi{
   background:var(--stone); padding:34px 30px; border-radius:var(--radius);
+  display:flex; flex-direction:column;
 }
-.testi p{ font-size:15px; color:var(--ink-soft); margin-bottom:18px; }
+.testi-stars{
+  color:var(--gold);
+  font-size:16px;
+  letter-spacing:2px;
+  margin-bottom:12px;
+}
+.testi p{ font-size:15px; color:var(--ink-soft); margin-bottom:18px; flex:1; line-height:1.6; }
+.testi-meta{
+  display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;
+  margin-top:auto;
+}
 .testi .who{ font-family:var(--serif); font-style:italic; color:var(--forest-dark); font-size:15px; }
+.testi-candle-link{
+  font-size:12.5px; color:var(--gold); display:inline-block; margin-top:6px;
+  text-decoration:none;
+}
+.testi-candle-link:hover{ text-decoration:underline; }
+.verified-pill{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(58,89,64,0.12);
+  color:var(--forest-mid);
+  font-family:var(--sans);
+  font-style:normal;
+  font-weight:500;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
 @media (max-width:860px){ .testi-row{ grid-template-columns:1fr; } }
 
 /* cta band */
@@ -573,6 +602,144 @@ blockquote{
 }
 @media (max-width:520px){
   .related-row{ grid-template-columns:minmax(0, 1fr); }
+}
+
+/* ============================================================
+   CUSTOMER RATINGS & REVIEWS
+   ============================================================ */
+.product-rating-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin:4px 0 16px;
+  font-size:14px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  cursor:pointer;
+}
+.product-rating-badge:hover{
+  color:var(--forest-dark);
+}
+.stars-gold{
+  color:var(--gold);
+  letter-spacing:1px;
+}
+.stars-empty{
+  color:rgba(34,30,22,0.22);
+  letter-spacing:1px;
+}
+.reviews-summary{
+  background:var(--cream);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:26px 28px;
+  margin-bottom:28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+}
+.reviews-score-box{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.reviews-score-num{
+  font-family:var(--serif);
+  font-size:42px;
+  color:var(--forest-dark);
+  line-height:1;
+}
+.reviews-score-meta{
+  font-size:13.5px;
+  color:var(--ink-soft);
+}
+.review-form-wrap{
+  margin-bottom:34px;
+}
+.review-form{
+  background:var(--cream);
+  border:1px solid var(--line);
+  padding:32px 28px;
+  border-radius:var(--radius);
+}
+.star-picker{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:4px;
+}
+.star-btn{
+  background:none;
+  border:0;
+  padding:0 2px;
+  font-size:28px;
+  color:rgba(34,30,22,0.22);
+  line-height:1;
+  transition:color .15s ease, transform .15s ease;
+  cursor:pointer;
+}
+.star-btn.active, .star-btn:hover, .star-btn.hovered{
+  color:var(--gold);
+}
+.star-btn:hover{
+  transform:scale(1.15);
+}
+.star-label{
+  font-size:13px;
+  color:var(--ink-soft);
+  margin-left:10px;
+}
+.reviews-list{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:22px;
+}
+@media (max-width:760px){
+  .reviews-list{ grid-template-columns:1fr; }
+}
+.review-card{
+  background:var(--cream);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px 24px;
+  display:flex;
+  flex-direction:column;
+}
+.review-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.review-card-title{
+  font-family:var(--serif);
+  font-size:16px;
+  font-weight:500;
+  color:var(--ink);
+  margin-bottom:6px;
+}
+.review-card-comment{
+  font-size:14px;
+  color:var(--ink-soft);
+  line-height:1.6;
+  margin:0 0 14px;
+  flex:1;
+}
+.review-card-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  font-size:12.5px;
+  color:var(--ink-soft);
+  margin-top:auto;
+  padding-top:10px;
+  border-top:1px solid rgba(34,30,22,0.08);
 }
 
 /* ============================================================

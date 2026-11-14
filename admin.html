@@ -96,6 +96,9 @@
         <button type="button" class="admin-tab" data-tab="orders">
           Orders &amp; Dispatch <span class="tab-badge" id="orders-pending-badge" style="display:none;">0</span>
         </button>
+        <button type="button" class="admin-tab" data-tab="reviews">
+          Reviews <span class="tab-badge" id="reviews-count-badge">0</span>
+        </button>
       </div>
 
       <div class="admin-stats" id="admin-stats"></div>
@@ -153,6 +156,27 @@
         </div>
 
         <div class="admin-orders-list" id="admin-orders-list"></div>
+      </section>
+
+      <section id="panel-reviews" style="display:none;">
+        <div class="admin-toolbar">
+          <h1>Customer reviews &amp; ratings</h1>
+          <button type="button" class="btn btn-line" id="refresh-reviews-btn" style="padding:10px 20px;">Refresh reviews</button>
+        </div>
+
+        <div class="admin-filters">
+          <div class="filter-pills">
+            <button type="button" class="pill active" data-review-filter="all">All</button>
+            <button type="button" class="pill" data-review-filter="approved">Approved</button>
+            <button type="button" class="pill" data-review-filter="pending">Hidden / Pending</button>
+            <button type="button" class="pill" data-review-filter="5star">5 Stars</button>
+            <button type="button" class="pill" data-review-filter="4star">4 Stars</button>
+            <button type="button" class="pill" data-review-filter="critical">1–3 Stars</button>
+          </div>
+          <input type="search" id="review-search" class="admin-search" placeholder="Search customer, candle, or review text…">
+        </div>
+
+        <div class="admin-orders-list" id="admin-reviews-list"></div>
       </section>
     </div>
   </div>
@@ -272,7 +296,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="config.js?v=3"></script>
-<script src="supabase-client.js?v=5"></script>
-<script src="admin.js?v=5"></script>
+<script src="supabase-client.js?v=6"></script>
+<script src="admin.js?v=6"></script>
 </body>
 </html>

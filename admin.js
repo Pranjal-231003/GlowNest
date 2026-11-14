@@ -6,10 +6,13 @@ let _adminState = {
   userId: null,
   products: [],
   orders: [],
+  reviews: [],
   activeTab: "candles",
   candleFilter: "all",
   candleSearch: "",
   orderFilter: "to_pack",
+  reviewFilter: "all",
+  reviewSearch: "",
   modalImageUrl: "",
   modalRemoveImage: false,
   modalSelectedFile: null,
@@ -255,10 +258,12 @@ function gnRenderStats(){
   const statsEl = document.getElementById("admin-stats");
   const candlesBadge = document.getElementById("candles-count-badge");
   const ordersBadge = document.getElementById("orders-pending-badge");
+  const reviewsBadge = document.getElementById("reviews-count-badge");
   if(!statsEl) return;
 
   const products = _adminState.products;
   const orders = _adminState.orders;
+  const reviews = _adminState.reviews || [];
   const activeCount = products.filter(p => p.active).length;
   const hiddenCount = products.length - activeCount;
   const lowStockCount = products.filter(p => p.active && Number(p.stock_qty) <= 5).length;
@@ -271,6 +276,7 @@ function gnRenderStats(){
     ordersBadge.textContent = String(toPackCount);
     ordersBadge.style.display = toPackCount > 0 ? "inline-block" : "none";
   }
+  if(reviewsBadge) reviewsBadge.textContent = String(reviews.length);
 
   statsEl.innerHTML = `
     <div class="stat-card">
@@ -700,13 +706,155 @@ async function gnReloadOrders(){
   gnRenderOrders();
 }
 
+function gnFilteredReviews(){
+  const q = (_adminState.reviewSearch || "").trim().toLowerCase();
+  const f = _adminState.reviewFilter || "all";
+  return (_adminState.reviews || []).filter(r => {
+    if(f === "approved" && !r.approved) return false;
+    if(f === "pending" && r.approved) return false;
+    if(f === "5star" && Number(r.rating) !== 5) return false;
+    if(f === "4star" && Number(r.rating) !== 4) return false;
+    if(f === "critical" && Number(r.rating) > 3) return false;
+
+    if(q){
+      const pName = r.products?.name || "";
+      const hay = `${r.customer_name || ""} ${r.customer_email || ""} ${pName} ${r.title || ""} ${r.comment || ""}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function gnRenderReviews(){
+  const box = document.getElementById("admin-reviews-list");
+  if(!box) return;
+  const list = gnFilteredReviews();
+  if(!list.length){
+    box.innerHTML = `<p class="empty-note" style="margin:8px 0;">No reviews match this filter.</p>`;
+    return;
+  }
+
+  box.innerHTML = list.map(r => {
+    const dt = r.created_at
+      ? new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "";
+    const pName = r.products ? r.products.name : (r.product_id || "Candle");
+    const pCat = r.products && typeof gnCategoryLabel === "function" ? gnCategoryLabel(r.products.category) : (r.products?.category || "");
+    const stars = "★".repeat(r.rating || 5) + "☆".repeat(Math.max(0, 5 - (r.rating || 5)));
+    const verified = r.verified_purchase
+      ? `<span class="verified-pill">✓ Verified Buyer</span>`
+      : `<span style="font-size:11.5px; color:var(--ink-soft); opacity:0.8;">Unverified</span>`;
+    const approved = r.approved !== false;
+    const emailStr = r.customer_email ? ` · <code>${gnEsc(r.customer_email)}</code>` : "";
+
+    return `
+      <div class="admin-order-card" data-review-id="${gnEsc(r.id)}">
+        <div class="admin-order-top">
+          <div>
+            <strong>${gnEsc(r.customer_name)}</strong>${emailStr}
+            <span class="admin-slug" style="margin-left:8px;">${gnEsc(dt)} · <code>${gnEsc(r.id.slice(0, 8))}</code></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="status-pill ${approved ? "paid" : "pending_payment"}">${approved ? "Approved (Visible)" : "Hidden"}</span>
+            <span class="stars-gold" style="font-size:16px;">${stars}</span>
+            <strong>${r.rating} / 5</strong>
+          </div>
+        </div>
+
+        <div class="admin-order-grid">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+              <span class="admin-candle-name"><strong>${gnEsc(pName)}</strong></span>
+              ${pCat ? `<span class="mini-tag">${gnEsc(pCat)}</span>` : ""}
+              ${verified}
+              <a href="product.html?id=${encodeURIComponent(r.product_id)}" target="_blank" rel="noopener" style="font-size:12.5px; color:var(--forest-dark); text-decoration:underline;">View product ↗</a>
+            </div>
+            ${r.title ? `<div style="font-family:var(--serif); font-size:16px; font-weight:500; margin-bottom:6px; color:var(--ink);">${gnEsc(r.title)}</div>` : ""}
+            <p style="font-size:14px; color:var(--ink-soft); line-height:1.6; margin:0;">${gnEsc(r.comment)}</p>
+          </div>
+
+          <div class="fulfill-box">
+            <div style="font-size:13px; font-weight:500; margin-bottom:10px; color:var(--ink);">Studio Moderation</div>
+            <p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 14px; line-height:1.5;">
+              ${approved ? "Visible in shop on product page" + (r.rating >= 4 ? " and eligible for homepage." : ".") : "Hidden from public view."}
+            </p>
+            <div class="fulfill-box-actions">
+              <button type="button" class="btn ${approved ? "btn-line" : "btn-gold"}" data-toggle-review="${gnEsc(r.id)}" style="padding:8px 16px; font-size:12.5px;">
+                ${approved ? "Hide review" : "Approve review"}
+              </button>
+              <button type="button" class="text-btn" data-del-review="${gnEsc(r.id)}" style="font-size:12.5px;">Delete</button>
+            </div>
+            <div class="fulfill-msg" data-review-msg style="margin-top:6px;"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  box.querySelectorAll("[data-toggle-review]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const rid = btn.dataset.toggleReview;
+      const target = _adminState.reviews.find(x => x.id === rid);
+      if(!target) return;
+      const nextApproved = !target.approved;
+      btn.disabled = true;
+      const card = btn.closest(".admin-order-card");
+      const msgEl = card.querySelector("[data-review-msg]");
+      if(msgEl) msgEl.textContent = "Updating…";
+      const sb = gnSupabase();
+      const { error } = await sb.from("reviews").update({ approved: nextApproved }).eq("id", rid);
+      btn.disabled = false;
+      if(error){
+        if(msgEl){ msgEl.style.color = "#a3433a"; msgEl.textContent = error.message; }
+        return;
+      }
+      target.approved = nextApproved;
+      gnRenderStats();
+      gnRenderReviews();
+    });
+  });
+
+  box.querySelectorAll("[data-del-review]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const rid = btn.dataset.delReview;
+      if(!confirm("Permanently delete this review from the database?")) return;
+      btn.disabled = true;
+      const card = btn.closest(".admin-order-card");
+      const msgEl = card.querySelector("[data-review-msg]");
+      if(msgEl) msgEl.textContent = "Deleting…";
+      const sb = gnSupabase();
+      const { error } = await sb.from("reviews").delete().eq("id", rid);
+      if(error){
+        btn.disabled = false;
+        if(msgEl){ msgEl.style.color = "#a3433a"; msgEl.textContent = error.message; }
+        return;
+      }
+      _adminState.reviews = _adminState.reviews.filter(x => x.id !== rid);
+      gnRenderStats();
+      gnRenderReviews();
+    });
+  });
+}
+
+async function gnReloadReviews(){
+  const sb = gnSupabase();
+  const { data, error } = await sb
+    .from("reviews")
+    .select("id, product_id, customer_name, customer_email, rating, title, comment, verified_purchase, approved, created_at, products(id, name, category, wax, image_url)")
+    .order("created_at", { ascending: false });
+  if(error) throw error;
+  _adminState.reviews = data || [];
+  gnRenderStats();
+  gnRenderReviews();
+}
+
 async function gnBootstrapPortal(session){
   if(_adminState.userId === session.user.id) return;
   _adminState.userId = session.user.id;
   gnSetScreen("in", session.user.email || "");
   await Promise.all([
     gnReloadCandles(),
-    gnReloadOrders().catch(() => {})
+    gnReloadOrders().catch(() => {}),
+    gnReloadReviews().catch(() => {})
   ]);
 }
 
@@ -838,6 +986,8 @@ async function gnInitAdmin(){
       _adminState.activeTab = tabBtn.dataset.tab;
       document.getElementById("panel-candles").style.display = _adminState.activeTab === "candles" ? "" : "none";
       document.getElementById("panel-orders").style.display = _adminState.activeTab === "orders" ? "" : "none";
+      const revPanel = document.getElementById("panel-reviews");
+      if(revPanel) revPanel.style.display = _adminState.activeTab === "reviews" ? "" : "none";
     });
   });
 
@@ -867,6 +1017,33 @@ async function gnInitAdmin(){
   document.getElementById("refresh-orders-btn").addEventListener("click", async () => {
     await gnReloadOrders().catch(err => alert(err.message));
   });
+
+  // Reviews filters, search & refresh
+  document.querySelectorAll("[data-review-filter]").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll("[data-review-filter]").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      _adminState.reviewFilter = pill.dataset.reviewFilter;
+      gnRenderReviews();
+    });
+  });
+  const revSearchInput = document.getElementById("review-search");
+  if(revSearchInput){
+    revSearchInput.addEventListener("input", (e) => {
+      _adminState.reviewSearch = e.target.value || "";
+      gnRenderReviews();
+    });
+  }
+  const refreshReviewsBtn = document.getElementById("refresh-reviews-btn");
+  if(refreshReviewsBtn){
+    refreshReviewsBtn.addEventListener("click", async () => {
+      refreshReviewsBtn.disabled = true;
+      refreshReviewsBtn.textContent = "Refreshing…";
+      await gnReloadReviews().catch(err => alert("Failed to refresh reviews: " + (err?.message || err)));
+      refreshReviewsBtn.disabled = false;
+      refreshReviewsBtn.textContent = "Refresh reviews";
+    });
+  }
 
   // Modal open/close & live controls
   document.getElementById("add-product-btn").addEventListener("click", () => gnOpenModal("add", null));

@@ -345,6 +345,7 @@ async function gnInitProduct(){
 
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0,4);
   document.getElementById("related-grid").innerHTML = related.map(gnProductCard).join("");
+  gnInitProductReviews(product);
 }
 
 async function gnInitHome(){
@@ -1155,11 +1156,275 @@ async function gnInitContact(){
   }
 }
 
+async function gnInitHomeReviews(){
+  const container = document.getElementById("home-reviews");
+  if(!container) return;
+  try{
+    const reviews = await gnFetchLatestGoodReviews(3);
+    if(reviews && reviews.length){
+      container.innerHTML = reviews.map(r => {
+        const pName = r.products ? r.products.name : "GlowNest candle";
+        const pCat = r.products && typeof gnCategoryLabel === "function" ? gnCategoryLabel(r.products.category) : "";
+        const pLabel = pCat ? `${pName} · ${pCat} pour` : pName;
+        const stars = "★".repeat(r.rating || 5);
+        const verifiedBadge = r.verified_purchase ? `<span class="verified-pill">✓ Verified</span>` : "";
+        return `
+          <div class="testi">
+            <div class="testi-stars">${stars}</div>
+            <p>${gnEsc(r.comment)}</p>
+            <div class="testi-meta">
+              <div>
+                <div class="who">${gnEsc(r.customer_name)}</div>
+                <a class="testi-candle-link" href="product.html?id=${encodeURIComponent(r.product_id)}">Reviewed ${gnEsc(pLabel)} ↗</a>
+              </div>
+              ${verifiedBadge}
+            </div>
+          </div>`;
+      }).join("");
+    }
+  }catch(_e){}
+}
+
+async function gnInitProductReviews(product){
+  const section = document.getElementById("product-reviews-section");
+  if(!section || !product) return;
+
+  const summaryEl = document.getElementById("reviews-summary");
+  const listEl = document.getElementById("reviews-list");
+  const badgeEl = document.getElementById("product-rating-badge");
+  const openBtn = document.getElementById("open-review-form-btn");
+  const closeBtn = document.getElementById("close-review-form-btn");
+  const formWrap = document.getElementById("review-form-wrap");
+  const form = document.getElementById("candle-review-form");
+  const statusEl = document.getElementById("review-status");
+
+  let reviews = [];
+  try{
+    reviews = await gnFetchProductReviews(product.id);
+  }catch(_e){
+    reviews = [];
+  }
+
+  function renderSummary(){
+    const count = reviews.length;
+    if(count === 0){
+      if(badgeEl){
+        badgeEl.style.display = "inline-flex";
+        badgeEl.innerHTML = `<span class="stars-gold">★★★★★</span> <span>Be the first to review this candle</span>`;
+        badgeEl.onclick = () => {
+          formWrap.style.display = "block";
+          formWrap.scrollIntoView({ behavior: "smooth" });
+        };
+      }
+      if(summaryEl){
+        summaryEl.innerHTML = `
+          <div>
+            <h3 style="margin:0 0 4px; font-size:18px;">No reviews yet</h3>
+            <p style="margin:0; font-size:14px; color:var(--ink-soft);">Tried this pour? Share your thoughts on scent throw, wax burn, and ambiance.</p>
+          </div>
+          <button type="button" class="btn btn-gold" id="summary-write-btn">Write the first review</button>`;
+        const writeBtn = document.getElementById("summary-write-btn");
+        if(writeBtn) writeBtn.addEventListener("click", () => {
+          formWrap.style.display = "block";
+          form.scrollIntoView({ behavior: "smooth" });
+        });
+      }
+      return;
+    }
+
+    const sum = reviews.reduce((acc, r) => acc + Number(r.rating || 5), 0);
+    const avg = (sum / count).toFixed(1);
+    const starsHtml = typeof gnRenderStars === "function" ? gnRenderStars(Math.round(sum / count)) : "★".repeat(5);
+
+    if(badgeEl){
+      badgeEl.style.display = "inline-flex";
+      badgeEl.innerHTML = `<span class="stars-gold">★</span> <strong>${avg}</strong> <span style="opacity:0.8;">(${count} review${count === 1 ? "" : "s"})</span> <span style="font-size:12px; text-decoration:underline; margin-left:4px;">View reviews ↓</span>`;
+      badgeEl.onclick = () => {
+        section.scrollIntoView({ behavior: "smooth" });
+      };
+    }
+
+    if(summaryEl){
+      summaryEl.innerHTML = `
+        <div class="reviews-score-box">
+          <div class="reviews-score-num">${avg}</div>
+          <div>
+            <div style="font-size:18px; margin-bottom:2px;">${starsHtml}</div>
+            <div class="reviews-score-meta">Based on ${count} customer review${count === 1 ? "" : "s"}</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-line" id="summary-write-btn">Write a review</button>`;
+      const writeBtn = document.getElementById("summary-write-btn");
+      if(writeBtn) writeBtn.addEventListener("click", () => {
+        formWrap.style.display = "block";
+        form.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  }
+
+  function renderList(){
+    if(!listEl) return;
+    if(!reviews.length){
+      listEl.innerHTML = `<p class="empty-note" style="grid-column:1 / -1; margin:10px 0;">No reviews yet. Your feedback helps our studio craft better pours.</p>`;
+      return;
+    }
+    listEl.innerHTML = reviews.map(r => {
+      const stars = typeof gnRenderStars === "function" ? gnRenderStars(r.rating || 5) : "★".repeat(r.rating || 5);
+      const verified = r.verified_purchase ? `<span class="verified-pill">✓ Verified Buyer</span>` : "";
+      const dt = r.created_at
+        ? new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+        : "";
+      const titleHtml = r.title ? `<div class="review-card-title">${gnEsc(r.title)}</div>` : "";
+      return `
+        <div class="review-card">
+          <div class="review-card-head">
+            <div>${stars}</div>
+            ${verified}
+          </div>
+          ${titleHtml}
+          <p class="review-card-comment">${gnEsc(r.comment)}</p>
+          <div class="review-card-footer">
+            <strong>${gnEsc(r.customer_name)}</strong>
+            <span>${gnEsc(dt)}</span>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  // Set up star picker
+  const starBtns = section.querySelectorAll(".star-btn");
+  const starHiddenInput = document.getElementById("f-review-rating");
+  const starLabel = document.getElementById("star-label");
+  const starDescriptions = {
+    1: "1 of 5 stars — Disappointed",
+    2: "2 of 5 stars — Fair",
+    3: "3 of 5 stars — Good",
+    4: "4 of 5 stars — Really liked it",
+    5: "5 of 5 stars — Loved it!"
+  };
+
+  starBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const val = Number(btn.dataset.star);
+      if(starHiddenInput) starHiddenInput.value = val;
+      if(starLabel) starLabel.textContent = starDescriptions[val] || `${val} of 5 stars`;
+      starBtns.forEach(b => {
+        const bVal = Number(b.dataset.star);
+        b.classList.toggle("active", bVal <= val);
+      });
+    });
+    btn.addEventListener("mouseenter", () => {
+      const val = Number(btn.dataset.star);
+      starBtns.forEach(b => {
+        b.classList.toggle("hovered", Number(b.dataset.star) <= val);
+      });
+    });
+  });
+
+  const starPicker = document.getElementById("star-picker");
+  if(starPicker){
+    starPicker.addEventListener("mouseleave", () => {
+      starBtns.forEach(b => b.classList.remove("hovered"));
+    });
+  }
+
+  // Toggle open / close
+  if(openBtn){
+    openBtn.addEventListener("click", () => {
+      formWrap.style.display = formWrap.style.display === "none" ? "block" : "none";
+      if(formWrap.style.display === "block"){
+        form.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  }
+  if(closeBtn){
+    closeBtn.addEventListener("click", () => {
+      formWrap.style.display = "none";
+      if(statusEl) statusEl.textContent = "";
+    });
+  }
+
+  // Pre-fill user info if logged in
+  try{
+    const user = await gnGetUser().catch(() => null);
+    if(user){
+      const nameInput = document.getElementById("f-review-name");
+      const fullName = gnUserFullName(user);
+      if(nameInput && !nameInput.value && fullName) nameInput.value = fullName;
+    }
+  }catch(_e){}
+
+  // Submit review
+  if(form){
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById("submit-review-btn");
+      submitBtn.disabled = true;
+      if(statusEl){
+        statusEl.className = "status-msg";
+        statusEl.textContent = "Publishing your review…";
+      }
+
+      try{
+        const user = await gnGetUser().catch(() => null);
+        const nameVal = document.getElementById("f-review-name").value.trim();
+        const ratingVal = Number(document.getElementById("f-review-rating")?.value || 5);
+        const titleVal = document.getElementById("f-review-title")?.value.trim() || null;
+        const commentVal = document.getElementById("f-review-comment").value.trim();
+
+        if(!nameVal || !commentVal){
+          throw new Error("Please enter your name and review details.");
+        }
+
+        const payload = {
+          product_id: product.id,
+          user_id: user?.id || null,
+          customer_name: nameVal,
+          customer_email: user?.email || null,
+          rating: ratingVal,
+          title: titleVal,
+          comment: commentVal
+        };
+
+        const created = await gnSubmitReview(payload);
+        reviews.unshift(created);
+        renderSummary();
+        renderList();
+
+        form.reset();
+        if(starHiddenInput) starHiddenInput.value = 5;
+        starBtns.forEach(b => b.classList.add("active"));
+        if(starLabel) starLabel.textContent = starDescriptions[5];
+
+        if(statusEl){
+          statusEl.className = "success-msg";
+          statusEl.textContent = "Thank you! Your review is now live.";
+        }
+        setTimeout(() => {
+          formWrap.style.display = "none";
+          if(statusEl) statusEl.textContent = "";
+        }, 3000);
+      }catch(err){
+        if(statusEl){
+          statusEl.className = "error-msg";
+          statusEl.textContent = err?.message || "Could not submit review. Please try again.";
+        }
+      }finally{
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
+  renderSummary();
+  renderList();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   gnInitNav();
   gnInitNavAuth();
   gnUpdateCartCount();
   gnInitHome();
+  gnInitHomeReviews();
   gnInitCatalogue();
   gnInitProduct();
   gnInitCart();
