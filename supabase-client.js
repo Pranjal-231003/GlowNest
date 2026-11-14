@@ -1,6 +1,6 @@
 /* GlowNest — Supabase client & auth/customer helpers */
 
-var GN_ALLOWED_PAGES = ["index", "catalogue", "product", "cart", "checkout", "account", "order"];
+var GN_ALLOWED_PAGES = ["index", "catalogue", "product", "cart", "checkout", "account", "order", "contact"];
 
 var GN_CATEGORIES = [
   { id: "rose", label: "Rose" },

@@ -689,6 +689,82 @@ table.admin-table tr:last-child td{ border-bottom:0; }
 .field input[type="checkbox"]{ width:auto; margin-right:8px; }
 
 /* ============================================================
+   CONTACT & SUPPORT
+   ============================================================ */
+.contact-layout{
+  display:grid;
+  grid-template-columns:1fr 1.15fr;
+  gap:44px;
+  align-items:start;
+}
+@media (max-width:860px){
+  .contact-layout{ grid-template-columns:1fr; gap:32px; }
+}
+.contact-card{
+  background:var(--stone);
+  padding:32px 30px;
+  border-radius:var(--radius);
+  margin-bottom:24px;
+}
+.contact-card h2{
+  font-size:22px;
+  margin-bottom:14px;
+}
+.contact-card p{
+  color:var(--ink-soft);
+  font-size:14.5px;
+  line-height:1.6;
+  margin:0 0 14px;
+}
+.contact-card p:last-child{ margin-bottom:0; }
+.contact-detail-item{
+  display:flex;
+  gap:12px;
+  margin-bottom:16px;
+  align-items:flex-start;
+}
+.contact-detail-item:last-child{ margin-bottom:0; }
+.contact-detail-item .icon{
+  color:var(--gold);
+  flex-shrink:0;
+  margin-top:2px;
+}
+.contact-policy-alert{
+  background:var(--cream);
+  border:1px solid var(--line);
+  border-left:3px solid var(--gold);
+  padding:16px 18px;
+  border-radius:var(--radius);
+  margin-top:16px;
+  font-size:13.5px;
+  color:var(--ink-soft);
+  line-height:1.6;
+}
+.contact-policy-alert strong{
+  color:var(--forest-dark);
+}
+.contact-form{
+  background:var(--stone);
+  padding:34px 32px;
+  border-radius:var(--radius);
+}
+.contact-form h2{
+  font-size:22px;
+  margin-bottom:8px;
+}
+.contact-form-desc{
+  color:var(--ink-soft);
+  font-size:14px;
+  margin-bottom:24px;
+}
+.contact-actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:20px;
+}
+
+/* ============================================================
    AUTH & CUSTOMER ACCOUNT
    ============================================================ */
 .nav-auth-link{
