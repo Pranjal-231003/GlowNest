@@ -931,60 +931,126 @@ async function gnInitCheckout(){
       pincode: document.getElementById("c-pin").value.trim()
     };
 
-    const { data, error } = await sb.functions.invoke("create-order", { body: payload });
-    let errMsg = data?.error;
-    let errStatus = error?.context?.status;
-    if(error){
-      errMsg = data?.error || error.message;
-      try{
-        const body = await error.context.json();
-        errMsg = body.error || errMsg;
-      }catch(_e){}
+    let data = null;
+    let errMsg = null;
+    try {
+      const resp = await fetch("/api/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": session.access_token ? `Bearer ${session.access_token}` : ""
+        },
+        body: JSON.stringify({
+          amount: subtotal * 100,
+          currency: "INR",
+          receipt: `rcpt_${Date.now()}`.slice(0, 40),
+          ...payload
+        })
+      });
+
+      if(resp.status === 401){
+        window.location.replace(gnAuthRedirectUrl(checkoutPage));
+        return;
+      }
+
+      if(resp.status === 404){
+        // Fallback to Supabase Edge Function if serverless route not mounted
+        const res = await sb.functions.invoke("create-order", { body: payload });
+        data = res.data;
+        if(res.error) errMsg = data?.error || res.error.message;
+      } else {
+        data = await resp.json().catch(() => null);
+        if(!resp.ok){
+          errMsg = data?.error || "Could not start payment. Please try again.";
+        }
+      }
+    } catch(netErr){
+      try {
+        const res = await sb.functions.invoke("create-order", { body: payload });
+        data = res.data;
+        if(res.error) errMsg = data?.error || res.error.message;
+      } catch(fallbackErr){
+        errMsg = netErr?.message || "Network error while reaching payment gateway.";
+      }
     }
-    if(errStatus === 401){
-      window.location.replace(gnAuthRedirectUrl(checkoutPage));
-      return;
-    }
-    if(errMsg || !data?.razorpayOrderId){
+
+    if(errMsg || (!data?.order_id && !data?.razorpayOrderId)){
       status.textContent = errMsg || "Could not start payment.";
       btn.disabled = false;
       return;
     }
 
-    const orderId = data.orderId;
-    const accessToken = data.accessToken;
+    const razorpayOrderId = data.order_id || data.razorpayOrderId;
+    const internalOrderId = data.orderId || data.internal_order_id || razorpayOrderId;
+    const accessToken = data.accessToken || data.access_token || "";
+    const razorpayKey = data.key_id || data.keyId || window.GN_CONFIG?.razorpayKeyId || "rzp_test_U0MPX5dlbVWrQt";
+
     const rzp = new Razorpay({
-      key: data.keyId,
+      key: razorpayKey,
       amount: data.amount,
-      currency: "INR",
+      currency: data.currency || "INR",
       name: "GlowNest",
       description: "Hand-poured candles",
-      order_id: data.razorpayOrderId,
-      prefill: { name: payload.customer_name, email: payload.email, contact: payload.phone },
+      order_id: razorpayOrderId,
+      prefill: {
+        name: payload.customer_name,
+        email: payload.email,
+        contact: payload.phone
+      },
       theme: { color: "#a9793a" },
       handler: async function(response){
         status.textContent = "Confirming payment…";
         try{
-          await sb.functions.invoke("verify-payment", {
-            body: {
-              orderId,
-              accessToken,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            }
+          const verifyPayload = {
+            order_id: response.razorpay_order_id,
+            payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            internal_order_id: internalOrderId,
+            orderId: internalOrderId,
+            accessToken: accessToken
+          };
+
+          const verifyRes = await fetch("/api/verify-payment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": session.access_token ? `Bearer ${session.access_token}` : ""
+            },
+            body: JSON.stringify(verifyPayload)
           });
-        }catch(_e){}
+
+          if(verifyRes.status === 404){
+            await sb.functions.invoke("verify-payment", { body: verifyPayload });
+          } else {
+            const verifyData = await verifyRes.json().catch(() => null);
+            if(!verifyRes.ok || !verifyData?.success){
+              status.textContent = verifyData?.message || "Payment verification failed. Please contact support.";
+              btn.disabled = false;
+              return;
+            }
+          }
+        }catch(_e){
+          console.warn("Payment verification warning:", _e);
+        }
         gnSaveCart([]);
-        window.location.href = `order.html?id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(accessToken)}`;
+        window.location.href = `order.html?id=${encodeURIComponent(internalOrderId)}&token=${encodeURIComponent(accessToken)}`;
       },
       modal: {
         ondismiss: function(){
-          status.textContent = "Payment window closed. You can try again, or check this order if you already paid.";
+          status.textContent = "Payment window closed. You can try again whenever you are ready.";
           btn.disabled = false;
         }
       }
     });
+
+    rzp.on("payment.failed", function(response){
+      const reason = response.error?.description || response.error?.reason || "Payment could not be processed.";
+      status.textContent = `Payment failed: ${reason}`;
+      btn.disabled = false;
+    });
+
     rzp.open();
     status.textContent = "";
   });
