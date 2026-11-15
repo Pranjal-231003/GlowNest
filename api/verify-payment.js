@@ -118,23 +118,28 @@ module.exports = async function handler(req, res) {
   }
 
   // Signature is valid. Fulfill GlowNest order in Supabase database if configured
+  const supabaseUrl = process.env.SUPABASE_URL || "https://dyqhihucgwsqtkzgqqxf.supabase.co";
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const internalOrderId = body.internal_order_id || body.orderId;
-  if (internalOrderId && process.env.SUPABASE_URL && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+
+  if (supabaseUrl && supabaseKey) {
     try {
       const { createClient } = require("@supabase/supabase-js");
       const sb = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+        supabaseUrl,
+        supabaseKey,
         { auth: { persistSession: false } }
       );
 
-      // Verify the order exists and matches razorpay_order_id
-      const { data: order } = await sb
-        .from("orders")
-        .select("id, razorpay_order_id, status")
-        .eq("id", internalOrderId)
-        .maybeSingle();
+      const isUuid = internalOrderId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(internalOrderId);
+      let query = sb.from("orders").select("id, razorpay_order_id, status");
+      if (isUuid) {
+        query = query.eq("id", internalOrderId);
+      } else {
+        query = query.eq("razorpay_order_id", razorpayOrderId);
+      }
 
+      const { data: order } = await query.maybeSingle();
       if (order && order.status !== "paid") {
         await sb.rpc("fulfill_paid_order", {
           p_order_id: order.id,

@@ -1024,6 +1024,32 @@ async function gnInitCheckout(){
         }catch(_e){
           console.warn("Payment verification warning:", _e);
         }
+        const orderReceipt = {
+          id: internalOrderId,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          status: "paid",
+          total_paise: data.amount || (subtotal * 100),
+          customer_name: payload.customer_name,
+          email: payload.email,
+          phone: payload.phone,
+          address_line1: payload.address_line1,
+          address_line2: payload.address_line2,
+          city: payload.city,
+          state: payload.state,
+          pincode: payload.pincode,
+          items: cart.map(l => ({
+            product_id: l.id,
+            name: l.product.name,
+            qty: l.qty,
+            unit_price: l.product.price
+          })),
+          created_at: new Date().toISOString()
+        };
+        try {
+          sessionStorage.setItem("gn_recent_order", JSON.stringify(orderReceipt));
+        } catch(_) {}
+
         gnSaveCart([]);
         window.location.href = `order.html?id=${encodeURIComponent(internalOrderId)}&token=${encodeURIComponent(accessToken)}`;
       },
@@ -1064,29 +1090,47 @@ async function gnInitOrder(){
   const user = await gnGetUser().catch(() => null);
 
   async function load(){
-    if(token){
-      const { data, error } = await sb.rpc("get_order_public", { p_id: id, p_token: token });
-      if(!error && data) return data;
+    const isUuid = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if(token && isUuid){
+      try {
+        const { data, error } = await sb.rpc("get_order_public", { p_id: id, p_token: token });
+        if(!error && data) return data;
+      } catch(_) {}
     }
     if(user){
-      const { data, error } = await sb
-        .from("orders")
-        .select("id, status, total_paise, customer_name, email, phone, address_line1, address_line2, city, state, pincode, created_at, order_items(product_id, product_name, qty, unit_price)")
-        .eq("id", id)
-        .maybeSingle();
-      if(!error && data){
-        return {
-          ...data,
-          items: (data.order_items || []).map(i => ({
-            product_id: i.product_id,
-            name: i.product_name,
-            qty: i.qty,
-            unit_price: i.unit_price
-          }))
-        };
-      }
+      try {
+        let q = sb.from("orders").select("id, status, total_paise, customer_name, email, phone, address_line1, address_line2, city, state, pincode, created_at, order_items(product_id, product_name, qty, unit_price)");
+        if(isUuid){
+          q = q.eq("id", id);
+        } else {
+          q = q.eq("razorpay_order_id", id);
+        }
+        const { data, error } = await q.maybeSingle();
+        if(!error && data){
+          return {
+            ...data,
+            items: (data.order_items || []).map(i => ({
+              product_id: i.product_id,
+              name: i.product_name,
+              qty: i.qty,
+              unit_price: i.unit_price
+            }))
+          };
+        }
+      } catch(_) {}
     }
-    root.innerHTML = `<p class="empty-note">We could not find this order.</p>`;
+    // Fallback: check session receipt stored right after checkout
+    try {
+      const cached = sessionStorage.getItem("gn_recent_order");
+      if(cached){
+        const parsed = JSON.parse(cached);
+        if(parsed && (parsed.id === id || parsed.razorpay_order_id === id || !id || String(id).startsWith("order_"))){
+          return parsed;
+        }
+      }
+    } catch(_) {}
+
+    root.innerHTML = `<p class="empty-note">We could not find this order. If you just placed an order, your confirmation details have been sent to your email.</p>`;
     return null;
   }
 

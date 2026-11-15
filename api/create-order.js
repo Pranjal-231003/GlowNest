@@ -96,12 +96,15 @@ module.exports = async function handler(req, res) {
   const cart = Array.isArray(body.cart) ? body.cart : null;
   const hasCart = cart && cart.length > 0;
 
-  if (hasCart && process.env.SUPABASE_URL && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+  const supabaseUrl = process.env.SUPABASE_URL || "https://dyqhihucgwsqtkzgqqxf.supabase.co";
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (hasCart && supabaseUrl && supabaseKey) {
     try {
       const { createClient } = require("@supabase/supabase-js");
       const sb = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+        supabaseUrl,
+        supabaseKey,
         { auth: { persistSession: false } }
       );
 
@@ -238,12 +241,12 @@ module.exports = async function handler(req, res) {
     });
 
     // If an internal DB order was created, update it with the Razorpay order ID
-    if (internalOrderId && process.env.SUPABASE_URL && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+    if (internalOrderId && supabaseUrl && supabaseKey) {
       try {
         const { createClient } = require("@supabase/supabase-js");
         const sb = createClient(
-          process.env.SUPABASE_URL,
-          process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+          supabaseUrl,
+          supabaseKey,
           { auth: { persistSession: false } }
         );
         await sb.from("orders").update({ razorpay_order_id: order.id }).eq("id", internalOrderId);
