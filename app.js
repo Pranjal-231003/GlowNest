@@ -975,7 +975,7 @@ async function gnInitCheckout(){
     const razorpayOrderId = data.order_id || data.razorpayOrderId;
     const internalOrderId = data.orderId || data.internal_order_id || razorpayOrderId;
     const accessToken = data.accessToken || data.access_token || "";
-    const razorpayKey = data.key_id || data.keyId || window.GN_CONFIG?.razorpayKeyId || "rzp_test_U0MPX5dlbVWrQt";
+    const razorpayKey = data.key_id || data.keyId || window.GN_CONFIG?.razorpayKeyId;
 
     const rzp = new Razorpay({
       key: razorpayKey,
