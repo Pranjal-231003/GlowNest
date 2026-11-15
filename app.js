@@ -898,13 +898,16 @@ async function gnInitCheckout(){
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const session = sb ? (await sb.auth.getSession().catch(() => ({ data: {} })))?.data?.session : null;
+    const userAccessToken = session?.access_token || "";
 
     const btn = form.querySelector("button[type=submit]");
     btn.disabled = true;
+    status.style.color = "";
     status.textContent = "Checking payment gateway…";
 
     const rzpReady = await gnEnsureRazorpay();
     if(!rzpReady){
+      status.style.color = "#c0392b";
       status.textContent = "Razorpay failed to load. Check your connection and try again.";
       btn.disabled = false;
       return;
@@ -912,6 +915,7 @@ async function gnInitCheckout(){
 
     status.textContent = "Creating your order…";
     const payload = {
+      user_id: user?.id || null,
       cart: cart.map(l => ({ id: l.id, qty: l.qty })),
       customer_name: document.getElementById("c-name").value.trim(),
       email: document.getElementById("c-email").value.trim(),
@@ -926,12 +930,12 @@ async function gnInitCheckout(){
     let data = null;
     let errMsg = null;
     try {
+      const headers = { "Content-Type": "application/json" };
+      if(userAccessToken) headers["Authorization"] = `Bearer ${userAccessToken}`;
+
       const resp = await fetch("/api/create-order", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": session.access_token ? `Bearer ${session.access_token}` : ""
-        },
+        headers,
         body: JSON.stringify({
           amount: subtotal * 100,
           currency: "INR",
@@ -939,8 +943,6 @@ async function gnInitCheckout(){
           ...payload
         })
       });
-
-
 
       if(resp.status === 404){
         // Fallback to Supabase Edge Function if serverless route not mounted
@@ -989,6 +991,7 @@ async function gnInitCheckout(){
       },
       theme: { color: "#a9793a" },
       handler: async function(response){
+        status.style.color = "";
         status.textContent = "Confirming payment…";
         try{
           const verifyPayload = {
@@ -999,23 +1002,30 @@ async function gnInitCheckout(){
             razorpay_signature: response.razorpay_signature,
             internal_order_id: internalOrderId,
             orderId: internalOrderId,
-            accessToken: accessToken
+            accessToken: accessToken,
+            user_id: user?.id || null,
+            email: payload.email,
+            customer_name: payload.customer_name,
+            phone: payload.phone,
+            amount: data.amount || (subtotal * 100),
+            total_paise: data.amount || (subtotal * 100)
           };
+
+          const verifyHeaders = { "Content-Type": "application/json" };
+          if(userAccessToken) verifyHeaders["Authorization"] = `Bearer ${userAccessToken}`;
 
           const verifyRes = await fetch("/api/verify-payment", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": session.access_token ? `Bearer ${session.access_token}` : ""
-            },
+            headers: verifyHeaders,
             body: JSON.stringify(verifyPayload)
           });
 
           if(verifyRes.status === 404){
-            await sb.functions.invoke("verify-payment", { body: verifyPayload });
+            await sb.functions.invoke("verify-payment", { body: verifyPayload }).catch(() => {});
           } else {
             const verifyData = await verifyRes.json().catch(() => null);
             if(!verifyRes.ok || !verifyData?.success){
+              status.style.color = "#c0392b";
               status.textContent = verifyData?.message || "Payment verification failed. Please contact support.";
               btn.disabled = false;
               return;

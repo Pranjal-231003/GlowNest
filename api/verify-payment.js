@@ -132,19 +132,101 @@ module.exports = async function handler(req, res) {
       );
 
       const isUuid = internalOrderId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(internalOrderId);
-      let query = sb.from("orders").select("id, razorpay_order_id, status");
+      let order = null;
+
       if (isUuid) {
-        query = query.eq("id", internalOrderId);
-      } else {
-        query = query.eq("razorpay_order_id", razorpayOrderId);
+        const { data: oById } = await sb
+          .from("orders")
+          .select("id, razorpay_order_id, status, user_id, email, total_paise")
+          .eq("id", internalOrderId)
+          .maybeSingle();
+        order = oById;
       }
 
-      const { data: order } = await query.maybeSingle();
-      if (order && order.status !== "paid") {
-        await sb.rpc("fulfill_paid_order", {
-          p_order_id: order.id,
-          p_payment_id: razorpayPaymentId
-        });
+      if (!order && razorpayOrderId) {
+        const { data: oByRzp } = await sb
+          .from("orders")
+          .select("id, razorpay_order_id, status, user_id, email, total_paise")
+          .eq("razorpay_order_id", razorpayOrderId)
+          .maybeSingle();
+        order = oByRzp;
+      }
+
+      if (order) {
+        // Resolve user_id if currently null
+        if (!order.user_id) {
+          let resolvedUserId = null;
+          const candidateUserId = body.user_id;
+          if (candidateUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidateUserId)) {
+            resolvedUserId = candidateUserId;
+          } else {
+            const customerEmail = String(order.email || body.email || "").trim();
+            if (customerEmail) {
+              const { data: cust } = await sb
+                .from("customers")
+                .select("id")
+                .ilike("email", customerEmail)
+                .maybeSingle();
+              if (cust?.id) resolvedUserId = cust.id;
+            }
+          }
+          if (resolvedUserId) {
+            await sb.from("orders").update({ user_id: resolvedUserId }).eq("id", order.id);
+          }
+        }
+
+        // Fulfill and mark paid
+        if (order.status !== "paid") {
+          const { error: rpcErr } = await sb.rpc("fulfill_paid_order", {
+            p_order_id: order.id,
+            p_payment_id: razorpayPaymentId
+          });
+
+          // If RPC fails (e.g. stock constraint or race condition), still mark status paid
+          if (rpcErr) {
+            console.warn("fulfill_paid_order RPC warning:", rpcErr.message);
+            await sb.from("orders").update({
+              status: "paid",
+              razorpay_payment_id: razorpayPaymentId,
+              razorpay_order_id: razorpayOrderId,
+              fulfillment_status: "unfulfilled"
+            }).eq("id", order.id);
+          }
+        } else if (!order.razorpay_payment_id) {
+          await sb.from("orders").update({
+            razorpay_payment_id: razorpayPaymentId
+          }).eq("id", order.id);
+        }
+      } else {
+        // Fallback: order wasn't found in DB, insert a completed record so payment is never lost
+        const customerEmail = String(body.email || "").trim();
+        let fallbackUserId = null;
+        if (body.user_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.user_id)) {
+          fallbackUserId = body.user_id;
+        } else if (customerEmail) {
+          const { data: cust } = await sb
+            .from("customers")
+            .select("id")
+            .ilike("email", customerEmail)
+            .maybeSingle();
+          if (cust?.id) fallbackUserId = cust.id;
+        }
+
+        try {
+          await sb.from("orders").insert({
+            user_id: fallbackUserId,
+            email: customerEmail,
+            customer_name: String(body.customer_name || "").trim(),
+            phone: String(body.phone || "").trim(),
+            status: "paid",
+            razorpay_order_id: razorpayOrderId,
+            razorpay_payment_id: razorpayPaymentId,
+            total_paise: Number(body.total_paise || body.amount || 0) || 100,
+            fulfillment_status: "unfulfilled"
+          });
+        } catch (e) {
+          console.warn("Fallback order insertion warning:", e.message);
+        }
       }
     } catch (dbErr) {
       console.warn("Supabase database fulfillment warning:", dbErr.message);

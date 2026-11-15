@@ -113,10 +113,42 @@ module.exports = async function handler(req, res) {
       const authHeader = req.headers["authorization"] || req.headers["Authorization"] || "";
       const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
       if (tokenMatch) {
-        const { data: userData } = await sb.auth.getUser(tokenMatch[1]);
-        if (userData?.user) {
-          userId = userData.user.id;
+        const rawToken = String(tokenMatch[1]).trim();
+        // A valid Supabase JWT consists of 3 dot-separated base64 segments
+        if (rawToken && rawToken.split(".").length === 3) {
+          try {
+            const { data: userData } = await sb.auth.getUser(rawToken);
+            if (userData?.user) {
+              userId = userData.user.id;
+            }
+          } catch (_) {}
         }
+      }
+
+      // Customer details
+      const customerName = String(body.customer_name || "").trim();
+      const email = String(body.email || "").trim();
+      const phone = String(body.phone || "").trim();
+      const addressLine1 = String(body.address_line1 || "").trim();
+      const addressLine2 = String(body.address_line2 || "").trim();
+      const city = String(body.city || "").trim();
+      const state = String(body.state || "").trim();
+      const pincode = String(body.pincode || "").trim();
+
+      // Fallback: resolve userId if passed in body or match registered customer by email
+      if (!userId && body.user_id && typeof body.user_id === "string") {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.user_id);
+        if (isUuid) userId = body.user_id;
+      }
+      if (!userId && email) {
+        try {
+          const { data: existingCust } = await sb
+            .from("customers")
+            .select("id")
+            .ilike("email", email)
+            .maybeSingle();
+          if (existingCust?.id) userId = existingCust.id;
+        } catch (_) {}
       }
 
       const qtyById = new Map();
@@ -163,31 +195,23 @@ module.exports = async function handler(req, res) {
 
       amountPaise = calculatedRupees * 100;
 
-      // Upsert customer if details provided
-      const customerName = String(body.customer_name || "").trim();
-      const email = String(body.email || "").trim();
-      const phone = String(body.phone || "").trim();
-      const addressLine1 = String(body.address_line1 || "").trim();
-      const addressLine2 = String(body.address_line2 || "").trim();
-      const city = String(body.city || "").trim();
-      const state = String(body.state || "").trim();
-      const pincode = String(body.pincode || "").trim();
-
       if (userId && email) {
-        await sb.from("customers").upsert(
-          {
-            id: userId,
-            email,
-            full_name: customerName,
-            phone,
-            address_line1: addressLine1,
-            address_line2: addressLine2 || null,
-            city,
-            state,
-            pincode
-          },
-          { onConflict: "id" }
-        ).catch(() => {});
+        try {
+          await sb.from("customers").upsert(
+            {
+              id: userId,
+              email,
+              full_name: customerName,
+              phone,
+              address_line1: addressLine1,
+              address_line2: addressLine2 || null,
+              city,
+              state,
+              pincode
+            },
+            { onConflict: "id" }
+          );
+        } catch (_) {}
       }
 
       const { data: orderData, error: orderErr } = await sb
@@ -215,9 +239,21 @@ module.exports = async function handler(req, res) {
         notes.glownest_order_id = orderData.id;
         if (userId) notes.user_id = userId;
 
-        await sb.from("order_items").insert(
-          items.map((it) => ({ ...it, order_id: orderData.id }))
-        ).catch(() => {});
+        if (items.length > 0) {
+          try {
+            await sb.from("order_items").insert(
+              items.map((it) => ({
+                order_id: orderData.id,
+                product_id: it.product_id,
+                product_name: it.product_name,
+                qty: it.qty,
+                unit_price: it.unit_price
+              }))
+            );
+          } catch (e) {
+            console.warn("order_items insert warning:", e.message);
+          }
+        }
       }
     } catch (err) {
       console.warn("Supabase order persistence error:", err.message);
