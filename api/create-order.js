@@ -261,11 +261,15 @@ module.exports = async function handler(req, res) {
       razorpayOrderId: order.id
     });
   } catch (err) {
-    const statusCode = err.statusCode || 500;
     const errorDescription =
       err.error?.description || err.error?.message || err.message || "Failed to create Razorpay order.";
+    const isAuth = err.statusCode === 401 || /auth/i.test(errorDescription);
+    const statusCode = isAuth ? 502 : (err.statusCode && err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 502);
+
     return sendJson(res, statusCode, {
-      error: errorDescription
+      error: isAuth
+        ? "Razorpay authentication failed. Please check that RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in your Vercel Environment Variables are valid, matching, and active in your Razorpay Dashboard."
+        : errorDescription
     });
   }
 };

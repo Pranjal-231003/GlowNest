@@ -826,33 +826,29 @@ async function gnInitCheckout(){
     return;
   }
 
-  window.addEventListener("pageshow", (e) => {
-    if(e.persisted) gnRequireAuth(checkoutPage);
-  });
+  const sb = gnSupabase();
+  const user = await gnGetUser().catch(() => null);
 
-  const user = await gnRequireAuth(checkoutPage);
-  if(!user) return;
   if(loadingEl) loadingEl.style.display = "none";
   if(layout) layout.style.display = "";
-
-  const sb = gnSupabase();
-  if(!sb){
-    window.location.replace(gnAuthRedirectUrl(checkoutPage));
-    return;
-  }
 
   const googleName = gnUserFullName(user);
   if(authBar){
     authBar.style.display = "flex";
-    const who = googleName && user.email ? `${googleName} (${user.email})` : (user.email || googleName || "customer");
-    authBar.innerHTML = `
-      <span>Signed in as <strong>${gnEsc(who)}</strong></span>
-      <button type="button" class="link-btn" id="checkout-switch-btn">Switch account</button>`;
-    document.getElementById("checkout-switch-btn").addEventListener("click", async () => {
-      gnClearOAuthState();
-      await sb.auth.signOut().catch(() => {});
-      window.location.href = gnAuthRedirectUrl(checkoutPage);
-    });
+    if(user){
+      const who = googleName && user.email ? `${googleName} (${user.email})` : (user.email || googleName || "customer");
+      authBar.innerHTML = `
+        <span>Signed in as <strong>${gnEsc(who)}</strong></span>
+        <button type="button" class="link-btn" id="checkout-switch-btn">Switch account</button>`;
+      document.getElementById("checkout-switch-btn").addEventListener("click", async () => {
+        gnClearOAuthState();
+        if(sb) await sb.auth.signOut().catch(() => {});
+        window.location.href = gnAuthRedirectUrl(checkoutPage);
+      });
+    } else {
+      authBar.innerHTML = `
+        <span>Checking out as guest. Have a GlowNest account? <a href="${gnAuthRedirectUrl(checkoutPage)}" class="link-btn" style="text-decoration:underline;">Sign in with Google</a> to save your address.</span>`;
+    }
   }
 
   let products = [];
@@ -860,7 +856,7 @@ async function gnInitCheckout(){
   try {
     const [prodList, prof] = await Promise.all([
       gnFetchProducts(),
-      gnFetchCustomerProfile().catch(() => null)
+      user ? gnFetchCustomerProfile().catch(() => null) : Promise.resolve(null)
     ]);
     products = prodList;
     profile = prof;
@@ -873,8 +869,8 @@ async function gnInitCheckout(){
 
   const prefillMap = {
     "c-name": profile?.full_name || googleName || "",
-    "c-email": profile?.email || user.email || "",
-    "c-phone": profile?.phone || user.user_metadata?.phone || user.phone || "",
+    "c-email": profile?.email || user?.email || "",
+    "c-phone": profile?.phone || user?.user_metadata?.phone || user?.phone || "",
     "c-line1": profile?.address_line1 || "",
     "c-line2": profile?.address_line2 || "",
     "c-city": profile?.city || "",
@@ -901,11 +897,7 @@ async function gnInitCheckout(){
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const { data: { session } } = await sb.auth.getSession();
-    if(!session){
-      window.location.replace(gnAuthRedirectUrl(checkoutPage));
-      return;
-    }
+    const session = sb ? (await sb.auth.getSession().catch(() => ({ data: {} })))?.data?.session : null;
 
     const btn = form.querySelector("button[type=submit]");
     btn.disabled = true;
@@ -948,10 +940,7 @@ async function gnInitCheckout(){
         })
       });
 
-      if(resp.status === 401){
-        window.location.replace(gnAuthRedirectUrl(checkoutPage));
-        return;
-      }
+
 
       if(resp.status === 404){
         // Fallback to Supabase Edge Function if serverless route not mounted
@@ -975,6 +964,7 @@ async function gnInitCheckout(){
     }
 
     if(errMsg || (!data?.order_id && !data?.razorpayOrderId)){
+      status.style.color = "#c0392b";
       status.textContent = errMsg || "Could not start payment.";
       btn.disabled = false;
       return;
