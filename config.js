@@ -3,5 +3,5 @@
 window.GN_CONFIG = {
   supabaseUrl: "https://dyqhihucgwsqtkzgqqxf.supabase.co",
   supabaseAnonKey: "sb_publishable_DP2QtCxcTca_tVIwNBLA2Q_IZQYdpY-",
-  razorpayKeyId: "rzp_test_U0MPX5dlbVWrQt"
+  razorpayKeyId: "rzp_live_U0YFpOYZenHixz"
 };
